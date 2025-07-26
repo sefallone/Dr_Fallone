@@ -1,55 +1,52 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.express as px
 
-# Configuración de la página
-st.set_page_config(page_title="Dashboard Excel", layout="wide")
+# Configuración
+st.set_page_config(layout="wide")
+st.title("📊 Dashboard para Excel Transpuesto")
 
-# Título
-st.title("📊 Dashboard de Análisis de Excel")
-
-# Carga el archivo
-uploaded_file = st.file_uploader("Sube tu archivo Excel (.xlsx)", type="xlsx")
-
+# Cargar archivo
+uploaded_file = st.file_uploader("Sube tu Excel (filas ↔ columnas)", type="xlsx")
 if uploaded_file:
-    # Leer el Excel
-    df = pd.read_excel(uploaded_file, engine='openpyxl')
-    
-    # Mostrar datos en bruto (opcional)
-    with st.expander("Ver datos originales"):
-        st.dataframe(df)
+    try:
+        # Leer el archivo y transponer
+        df = pd.read_excel(uploaded_file, header=None)  # No asumir encabezados
+        df_transposed = df.T  # Transponer: filas → columnas
+        
+        # Convertir la primera fila en encabezados
+        df_transposed.columns = df_transposed.iloc[0]  # Usar primera fila como nombres de columnas
+        df_clean = df_transposed.drop(df_transposed.index[0])  # Eliminar la primera fila (ahora es el header)
+        
+        # Mostrar datos limpios (para debug)
+        with st.expander("Ver datos transpuestos"):
+            st.dataframe(df_clean)
 
-    # --- KPIs ---
-    st.header("🔍 KPIs Principales")
-    col1, col2, col3 = st.columns(3)
+        # --- KPIs ---
+        st.header("🔍 KPIs")
+        numeric_cols = df_clean.select_dtypes(include=['number']).columns
+        
+        if not numeric_cols.empty:
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Ventas", f"${df_clean['Ventas'].sum():,.0f}")  # Ajusta 'Ventas' a tu columna
+            col2.metric("Promedio", f"${df_clean['Ventas'].mean():,.0f}")
+            col3.metric("Registros", len(df_clean))
+        
+        # --- Gráficos ---
+        st.header("📈 Gráficos")
+        
+        # Gráfico de barras (ajusta 'Categoría' y 'Ventas')
+        if 'Ventas' in df_clean.columns:
+            fig = px.bar(df_clean, x='Categoría', y='Ventas', title="Ventas por Categoría")
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Gráfico de línea para series temporales
+        if 'Fecha' in df_clean.columns:
+            df_clean['Fecha'] = pd.to_datetime(df_clean['Fecha'])  # Convertir a fecha
+            fig2 = px.line(df_clean, x='Fecha', y='Ventas', title="Ventas en el tiempo")
+            st.plotly_chart(fig2, use_container_width=True)
     
-    # Ejemplo de KPIs (ajusta según tus columnas)
-    if 'Ventas' in df.columns:
-        col1.metric("Ventas Totales", f"${df['Ventas'].sum():,.0f}")
-        col2.metric("Promedio Ventas", f"${df['Ventas'].mean():,.0f}")
-        col3.metric("Transacciones", df.shape[0])
-
-    # --- Gráficos ---
-    st.header("📈 Visualizaciones")
-    
-    # Gráfico 1: Ventas por categoría (Plotly)
-    if 'Ventas' in df.columns and 'Categoría' in df.columns:
-        fig1 = px.bar(df, x='Categoría', y='Ventas', title="Ventas por Categoría")
-        st.plotly_chart(fig1, use_container_width=True)
-    
-    # Gráfico 2: Serie temporal (Matplotlib)
-    if 'Fecha' in df.columns:
-        df['Fecha'] = pd.to_datetime(df['Fecha'])  # Convertir a datetime
-        fig2, ax = plt.subplots()
-        df.groupby(df['Fecha'].dt.to_period('M'))['Ventas'].sum().plot(kind='line', ax=ax)
-        ax.set_title("Ventas Mensuales")
-        st.pyplot(fig2)
-
-    # Gráfico 3: Pie chart (Plotly)
-    if 'Región' in df.columns:
-        fig3 = px.pie(df, names='Región', title="Distribución por Región")
-        st.plotly_chart(fig3, use_container_width=True)
-
+    except Exception as e:
+        st.error(f"Error al procesar el archivo: {e}")
 else:
     st.warning("Por favor, sube un archivo Excel.")
