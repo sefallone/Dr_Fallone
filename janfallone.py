@@ -9,7 +9,7 @@ st.markdown("""
         padding-top: 2rem;
     }
     .metric-container {
-        background-color: #F0F2F6;
+        background-color: #325EB8;
         padding: 1rem;
         border-radius: 0.5rem;
         margin-bottom: 1rem;
@@ -20,7 +20,7 @@ st.markdown("""
         color: #2E4053;
     }
     .stExpander {
-        background-color: #FAFAFA;
+        background-color: #325EB8;
         border: 1px solid #E0E0E0;
         border-radius: 0.5rem;
     }
@@ -32,70 +32,55 @@ st.title("💼 Distribución de Facturación | VITHAS - OSA")
 # --- INPUT DE FACTURACIÓN ---
 with st.expander("📋 Ingresar Facturación por Especialidad"):
     st.subheader("💳 Facturación CCEE")
-    ccee_hombro = st.number_input("Hombro y Codo (CCEE)", min_value=0.0, step=100.0)
-    ccee_rodilla = st.number_input("Rodilla (CCEE)", min_value=0.0, step=100.0)
-    ccee_pie = st.number_input("Pie y Tobillo (CCEE)", min_value=0.0, step=100.0)
-    facturacion_ccee = ccee_hombro + ccee_rodilla + ccee_pie
+    ccee_OSB = st.number_input("Hombro y Codo (CCEE)", min_value=0.0, step=100.0)
+    ccee_SMOB = st.number_input("Rodilla (CCEE)", min_value=0.0, step=100.0)
+    ccee_JPP = st.number_input("Pie y Tobillo (CCEE)", min_value=0.0, step=100.0)
+    facturacion_ccee = ccee_OSB + ccee_SMOD + ccee_JPP
 
     st.subheader("🔪 Facturación Quirúrgica")
-    q_hombro = st.number_input("Hombro y Codo (Q)", min_value=0.0, step=100.0)
-    q_rodilla = st.number_input("Rodilla (Q)", min_value=0.0, step=100.0)
-    q_pie = st.number_input("Pie y Tobillo (Q)", min_value=0.0, step=100.0)
-    facturacion_quirurgico = q_hombro + q_rodilla + q_pie
+    q_OSB = st.number_input("Hombro y Codo (Q)", min_value=0.0, step=100.0)
+    q_SMOB = st.number_input("Rodilla (Q)", min_value=0.0, step=100.0)
+    q_JPP = st.number_input("Pie y Tobillo (Q)", min_value=0.0, step=100.0)
+    facturacion_quirurgico = q_OSB + q_SMOB + q_JPP
 
     st.subheader("🚨 Facturación Urgencias")
-    u_hombro = st.number_input("Hombro y Codo (U)", min_value=0.0, step=100.0)
-    u_rodilla = st.number_input("Rodilla (U)", min_value=0.0, step=100.0)
-    u_pie = st.number_input("Pie y Tobillo (U)", min_value=0.0, step=100.0)
-    facturacion_urgencias = u_hombro + u_rodilla + u_pie
+    u_OSB = st.number_input("Hombro y Codo (U)", min_value=0.0, step=100.0)
+    u_SMOB = st.number_input("Rodilla (U)", min_value=0.0, step=100.0)
+    u_JPP = st.number_input("Pie y Tobillo (U)", min_value=0.0, step=100.0)
+    facturacion_urgencias = u_OSB + u_SMOB + u_JPP
 
 # --- DISTRIBUCIONES ---
-vithas_total = facturacion_ccee * 0.20 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50
-osa_total = facturacion_ccee * 0.80 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50
-
-osa_hombro = (ccee_hombro * 0.80) + (q_hombro * 0.90) + (u_hombro * 0.50)
-osa_rodilla = (ccee_rodilla * 0.80) + (q_rodilla * 0.90) + (u_rodilla * 0.50)
-osa_pie = (ccee_pie * 0.80) + (q_pie * 0.90) + (u_pie * 0.50)
+vithas_total = facturacion_ccee * 0.20 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50  # Vithas Total
+osa_total = facturacion_ccee * 0.80 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50     # OSA Total Recibido
 
 # --- INPUT: % QUE ME QUEDO DE OSA ---
 mi_porcentaje = st.slider("Selecciona tu porcentaje dentro de OSA (%)", 0, 100, 30)
 mi_porcentaje_decimal = mi_porcentaje / 100
 
-yo_hombro = osa_hombro * mi_porcentaje_decimal
-yo_rodilla = osa_rodilla * mi_porcentaje_decimal
-yo_pie = osa_pie * mi_porcentaje_decimal
-yo_total = yo_hombro + yo_rodilla + yo_pie
+osa_beneficios = osa_total * mi_porcentaje_decimal   # OSA Total Beneficios
+
+osa_OSB = [(ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)] * (1 - mi_porcentaje_decimal)
+osa_SMOB = [(ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)] * (1 - mi_porcentaje_decimal)
+osa_JPP = [(ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)] * (1 - mi_porcentaje_decimal)
+
 
 # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
-gf = yo_total * 0.55
-jp = yo_total * 0.225
-jpp_p = yo_total * 0.225
-
-# El resto de OSA se divide:
-osb = osa_hombro - yo_hombro
-smob = osa_rodilla - yo_rodilla
-jpp = osa_pie - yo_pie
-
-# --- PARTICION INTERNA OSA ---
-osa_part1 = osa_total * 0.55
-osa_part2 = osa_total * 0.225
-osa_part3 = osa_total * 0.225
+gf = osa_beneficios * 0.55
+jp = osa_beneficios * 0.225
+jpp_p = osa_beneficios * 0.225
 
 # --- TOTALES ---
 total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urgencias
 
 total_distribuciones = {
     "VITHAS": vithas_total,
-    "Tú (OSA)": yo_total,
+    "OSA": osa_total,
     "GF (55% de tu OSA)": gf,
     "JP (22.5% de tu OSA)": jp,
     "JPP Pers. (22.5% de tu OSA)": jpp_p,
-    "OSB (Hombro)": osb,
-    "SMOB (Rodilla)": smob,
-    "JPP (Pie)": jpp,
-    "OSA Parte 1 (55%)": osa_part1,
-    "OSA Parte 2 (22.5%)": osa_part2,
-    "OSA Parte 3 (22.5%)": osa_part3,
+    "OSB (Hombro)": osa_OSB,
+    "SMOB (Rodilla)": osa_SMOB,
+    "JPP (Pie)": osa_JPP,
     "Total CCEE": facturacion_ccee,
     "Total Quirúrgico": facturacion_quirurgico,
     "Total Urgencias": facturacion_urgencias
@@ -110,9 +95,9 @@ with st.container():
     with k1:
         st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
     with k2:
-        st.metric("🟩 Tú (OSA)", f"{yo_total:,.2f} €")
+        st.metric("🟩  OSA", f"{osa_total:,.2f} €")
     with k3:
-        st.metric("🔺 Total OSA Repartido", f"{osa_total - yo_total:,.2f} €")
+        st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
 
 with st.container():
     m1, m2, m3 = st.columns(3)
@@ -126,11 +111,11 @@ with st.container():
 with st.container():
     d1, d2, d3 = st.columns(3)
     with d1:
-        st.success(f"OSB (Hombro): {osb:,.2f} €")
+        st.success(f"OSB (Hombro): {osa_OSB:,.2f} €")
     with d2:
-        st.info(f"SMOB (Rodilla): {smob:,.2f} €")
+        st.info(f"SMOB (Rodilla): {osa_SMOB:,.2f} €")
     with d3:
-        st.warning(f"JPP (Pie y Tobillo): {jpp:,.2f} €")
+        st.warning(f"JPP (Pie y Tobillo): {osa_JPP:,.2f} €")
 
 for k, v in total_distribuciones.items():
     st.write(f"{k}: {v:,.2f} €")
