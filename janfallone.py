@@ -8,21 +8,21 @@ st.title("💼 Distribución de Facturación | VITHAS - OSA")
 # --- INPUT DE FACTURACIÓN ---
 with st.expander("📋 Ingresar Facturación por Especialidad"):
     st.subheader("💳 Facturación CCEE")
-    ccee_hombro = st.number_input("Hombro y Codo (CCEE)", min_value=0.0, step=10000.0)
-    ccee_rodilla = st.number_input("Rodilla (CCEE)", min_value=0.0, step=10000.0)
-    ccee_pie = st.number_input("Pie y Tobillo (CCEE)", min_value=0.0, step=10000.0)
+    ccee_hombro = st.number_input("Hombro y Codo (CCEE)", min_value=0.0, step=100.0)
+    ccee_rodilla = st.number_input("Rodilla (CCEE)", min_value=0.0, step=100.0)
+    ccee_pie = st.number_input("Pie y Tobillo (CCEE)", min_value=0.0, step=100.0)
     facturacion_ccee = ccee_hombro + ccee_rodilla + ccee_pie
 
     st.subheader("🔪 Facturación Quirúrgica")
-    q_hombro = st.number_input("Hombro y Codo (Q)", min_value=0.0, step=10000.0)
-    q_rodilla = st.number_input("Rodilla (Q)", min_value=0.0, step=10000.0)
-    q_pie = st.number_input("Pie y Tobillo (Q)", min_value=0.0, step=10000.0)
+    q_hombro = st.number_input("Hombro y Codo (Q)", min_value=0.0, step=100.0)
+    q_rodilla = st.number_input("Rodilla (Q)", min_value=0.0, step=100.0)
+    q_pie = st.number_input("Pie y Tobillo (Q)", min_value=0.0, step=100.0)
     facturacion_quirurgico = q_hombro + q_rodilla + q_pie
 
     st.subheader("🚨 Facturación Urgencias")
-    u_hombro = st.number_input("Hombro y Codo (U)", min_value=0.0, step=10000.0)
-    u_rodilla = st.number_input("Rodilla (U)", min_value=0.0, step=10000.0)
-    u_pie = st.number_input("Pie y Tobillo (U)", min_value=0.0, step=10000.0)
+    u_hombro = st.number_input("Hombro y Codo (U)", min_value=0.0, step=100.0)
+    u_rodilla = st.number_input("Rodilla (U)", min_value=0.0, step=100.0)
+    u_pie = st.number_input("Pie y Tobillo (U)", min_value=0.0, step=100.0)
     facturacion_urgencias = u_hombro + u_rodilla + u_pie
 
 # --- DISTRIBUCIONES ---
@@ -76,7 +76,9 @@ total_distribuciones = {
 
 st.markdown("---")
 st.header("📊 Totales de Distribución")
-k1, k2, k3 = st.columns(3)
+k0, k1, k2, k3 = st.columns(4)
+with k0:
+    st.metric("💰 Total Facturación", f"{total_facturacion:,.2f} €")
 with k1:
     st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
 with k2:
@@ -106,7 +108,5 @@ fig = px.pie(
 )
 fig.update_traces(textposition="inside", textinfo="percent+label")
 st.plotly_chart(fig, use_container_width=True)
-
-
 
 
