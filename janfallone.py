@@ -78,10 +78,11 @@ with col1:
 
 with col2:
     st.metric("🟦 OSA", f"{osa_total:,.2f} €")
-    st.text(f"Tú: {mi_parte_osa:,.2f} € ({mi_porcentaje}%)")
-    st.text(f"OSB: {osb:,.2f} €")
-    st.text(f"SMOB: {smob:,.2f} €")
-    st.text(f"JPP: {jpp:,.2f} €")
+    st.text(f"Tú (OSA): {yo_total:,.2f} € ({mi_porcentaje}%)")
+    st.text(f"OSB (Hombro y Codo): {osb:,.2f} €")
+    st.text(f"SMOB (Rodilla): {smob:,.2f} €")
+    st.text(f"JPP (Pie y Tobillo): {jpp:,.2f} €")
+
 
 # --- GRÁFICO GLOBAL ---
 st.subheader("📉 Distribución Global")
