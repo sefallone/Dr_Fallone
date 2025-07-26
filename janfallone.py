@@ -72,10 +72,10 @@ def calculate_kpis(df):
     }
     
     # Cálculo de diferencias porcentuales
-    resultados['Diferencia % Total'] = ((resultados['Total VITHAS'] / resultados['Total OSA'] - 1) * 100
-    resultados['Diferencia % CCEE'] = ((resultados['CCEE VITHAS'] / resultados['CCEE OSA'] - 1) * 100
-    resultados['Diferencia % Quirúrgico'] = ((resultados['Quirúrgico VITHAS'] / resultados['Quirúrgico OSA'] - 1) * 100
-    resultados['Diferencia % Urgencias'] = ((resultados['Urgencias VITHAS'] / resultados['Urgencias OSA'] - 1) * 100
+    resultados['Diferencia % Total'] = ((resultados['Total VITHAS'] / resultados['Total OSA']) - 1) * 100
+    resultados['Diferencia % CCEE'] = ((resultados['CCEE VITHAS'] / resultados['CCEE OSA']) - 1) * 100
+    resultados['Diferencia % Quirúrgico'] = ((resultados['Quirúrgico VITHAS'] / resultados['Quirúrgico OSA']) - 1) * 100
+    resultados['Diferencia % Urgencias'] = ((resultados['Urgencias VITHAS'] / resultados['Urgencias OSA']) - 1) * 100
     
     return resultados
 
