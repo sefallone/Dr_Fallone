@@ -7,9 +7,27 @@ st.set_page_config(page_title="Distribución de Facturación", layout="centered"
 st.title("💰 Dashboard de Distribución de Facturación")
 st.markdown("Distribuye la facturación entre **VITHAS**, **OSA** y sus socios.")
 
-facturacion_ccee = st.number_input("Total Facturación CCEE (€)", min_value=0.0, step=100.0, format="%.2f")
-facturacion_quirurgico = st.number_input("Total Facturación Quirúrgico (€)", min_value=0.0, step=100.0, format="%.2f")
-facturacion_urgencias = st.number_input("Total Facturación Urgencias (€)", min_value=0.0, step=100.0, format="%.2f")
+# CCEE
+st.subheader("📋 Facturación CCEE")
+ccee_hombro = st.number_input("🦴 Hombro y Codo - CCEE (€)", min_value=0.0, step=100.0)
+ccee_rodilla = st.number_input("🦵 Rodilla - CCEE (€)", min_value=0.0, step=100.0)
+ccee_pie = st.number_input("🦶 Pie - CCEE (€)", min_value=0.0, step=100.0)
+facturacion_ccee = ccee_hombro + ccee_rodilla + ccee_pie
+
+# Quirúrgico
+st.subheader("🔪 Facturación Quirúrgica")
+q_hombro = st.number_input("🦴 Hombro y Codo - Quirúrgico (€)", min_value=0.0, step=100.0)
+q_rodilla = st.number_input("🦵 Rodilla - Quirúrgico (€)", min_value=0.0, step=100.0)
+q_pie = st.number_input("🦶 Pie - Quirúrgico (€)", min_value=0.0, step=100.0)
+facturacion_quirurgico = q_hombro + q_rodilla + q_pie
+
+# Urgencias
+st.subheader("🚨 Facturación Urgencias")
+u_hombro = st.number_input("🦴 Hombro y Codo - Urgencias (€)", min_value=0.0, step=100.0)
+u_rodilla = st.number_input("🦵 Rodilla - Urgencias (€)", min_value=0.0, step=100.0)
+u_pie = st.number_input("🦶 Pie - Urgencias (€)", min_value=0.0, step=100.0)
+facturacion_urgencias = u_hombro + u_rodilla + u_pie
+
 
 # --- CÁLCULOS VITHAS ---
 vithas_ccee = facturacion_ccee * 0.20
