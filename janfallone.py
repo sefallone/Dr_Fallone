@@ -3,6 +3,30 @@ import plotly.express as px
 
 st.set_page_config(page_title="Distribución de Facturación", layout="wide")
 
+st.markdown("""
+<style>
+    .block-container {
+        padding-top: 2rem;
+    }
+    .metric-container {
+        background-color: #F0F2F6;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .stMetric {
+        font-weight: bold;
+        color: #2E4053;
+    }
+    .stExpander {
+        background-color: #FAFAFA;
+        border: 1px solid #E0E0E0;
+        border-radius: 0.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("💼 Distribución de Facturación | VITHAS - OSA")
 
 # --- INPUT DE FACTURACIÓN ---
@@ -71,28 +95,42 @@ total_distribuciones = {
     "JPP (Pie)": jpp,
     "OSA Parte 1 (55%)": osa_part1,
     "OSA Parte 2 (22.5%)": osa_part2,
-    "OSA Parte 3 (22.5%)": osa_part3
+    "OSA Parte 3 (22.5%)": osa_part3,
+    "Total CCEE": facturacion_ccee,
+    "Total Quirúrgico": facturacion_quirurgico,
+    "Total Urgencias": facturacion_urgencias
 }
 
 st.markdown("---")
 st.header("📊 Totales de Distribución")
-k0, k1, k2, k3 = st.columns(4)
-with k0:
-    st.metric("💰 Total Facturación", f"{total_facturacion:,.2f} €")
-with k1:
-    st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
-with k2:
-    st.metric("🟩 Tú (OSA)", f"{yo_total:,.2f} €")
-with k3:
-    st.metric("🔺 Total OSA Repartido", f"{osa_total - yo_total:,.2f} €")
+with st.container():
+    k0, k1, k2, k3 = st.columns(4)
+    with k0:
+        st.metric("💰 Total Facturación", f"{total_facturacion:,.2f} €")
+    with k1:
+        st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
+    with k2:
+        st.metric("🟩 Tú (OSA)", f"{yo_total:,.2f} €")
+    with k3:
+        st.metric("🔺 Total OSA Repartido", f"{osa_total - yo_total:,.2f} €")
 
-d1, d2, d3 = st.columns(3)
-with d1:
-    st.success(f"OSB (Hombro): {osb:,.2f} €")
-with d2:
-    st.info(f"SMOB (Rodilla): {smob:,.2f} €")
-with d3:
-    st.warning(f"JPP (Pie y Tobillo): {jpp:,.2f} €")
+with st.container():
+    m1, m2, m3 = st.columns(3)
+    with m1:
+        st.metric("CCEE", f"{facturacion_ccee:,.2f} €")
+    with m2:
+        st.metric("Quirúrgico", f"{facturacion_quirurgico:,.2f} €")
+    with m3:
+        st.metric("Urgencias", f"{facturacion_urgencias:,.2f} €")
+
+with st.container():
+    d1, d2, d3 = st.columns(3)
+    with d1:
+        st.success(f"OSB (Hombro): {osb:,.2f} €")
+    with d2:
+        st.info(f"SMOB (Rodilla): {smob:,.2f} €")
+    with d3:
+        st.warning(f"JPP (Pie y Tobillo): {jpp:,.2f} €")
 
 for k, v in total_distribuciones.items():
     st.write(f"{k}: {v:,.2f} €")
@@ -108,5 +146,4 @@ fig = px.pie(
 )
 fig.update_traces(textposition="inside", textinfo="percent+label")
 st.plotly_chart(fig, use_container_width=True)
-
 
