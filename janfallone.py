@@ -5,81 +5,67 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # Configuración de la página
-st.set_page_config(page_title="Dashboard Avanzado", layout="wide", page_icon="📊")
+st.set_page_config(page_title="Proyección VITHAS-OSA 2026", layout="wide", page_icon="🏥")
 
 # Título
-st.title("📊 Dashboard Analítico Avanzado")
+st.title("🏥 Dashboard de Proyección Médica 2026")
+st.markdown("### Análisis de Facturación, Pacientes y Procedimientos")
 
 # Carga de archivo
-uploaded_file = st.file_uploader("Sube tu archivo Excel (.xlsx)", type="xlsx")
+uploaded_file = st.file_uploader("Sube tu archivo 'Proyeccion 3.xlsx'", type="xlsx")
 
 if uploaded_file:
     try:
-        # 1. Leer y transponer datos
-        df = pd.read_excel(uploaded_file, header=None)
-        df_transposed = df.T
-        df_clean = df_transposed.rename(columns=df_transposed.iloc[0]).drop(index=df_transposed.index[0])
+        # 1. Leer datos
+        df = pd.read_excel(uploaded_file, sheet_name="Proyeccion 2026")
         
-        # 2. Limpieza y conversión de datos
-        # Convertir posibles columnas numéricas
-        for col in df_clean.columns:
-            df_clean[col] = pd.to_numeric(df_clean[col], errors='ignore')
+        # Limpieza de datos
+        df['Fecha'] = pd.to_datetime(df['Fecha']).dt.date
+        numeric_cols = df.select_dtypes(include=['number']).columns
+        for col in numeric_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
         
-        # Convertir fechas si existen
-        date_cols = [col for col in df_clean.columns if 'fecha' in col.lower() or 'date' in col.lower()]
-        for col in date_cols:
-            df_clean[col] = pd.to_datetime(df_clean[col], errors='coerce')
-        
-        # 3. Mostrar datos procesados (opcional)
+        # Mostrar datos procesados (opcional)
         with st.expander("🔍 Ver datos procesados", expanded=False):
-            st.dataframe(df_clean)
-            st.write(f"📝 Forma del dataset: {df_clean.shape}")
-            st.write("📌 Tipos de datos:", df_clean.dtypes)
+            st.dataframe(df)
+            st.write(f"📝 Forma del dataset: {df.shape}")
+            st.write("📌 Tipos de datos:", df.dtypes)
         
         # ==============================================
-        # SECCIÓN DE KPIs (8 métricas)
+        # SECCIÓN DE KPIs (8 métricas clave)
         # ==============================================
         st.markdown("---")
         st.header("📈 KPIs Principales")
         
-        # Crear 4 filas con 2 KPIs cada una (total 8)
-        for i in range(4):
-            cols = st.columns(2)
-            with cols[0]:
-                if i == 0 and 'Ventas' in df_clean.columns:
-                    ventas_totales = df_clean['Ventas'].sum()
-                    st.metric("1. Ventas Totales", f"${ventas_totales:,.0f}", 
-                             help="Suma acumulada de todas las ventas")
-                
-                elif i == 1 and 'Ganancia' in df_clean.columns:
-                    ganancia_total = df_clean['Ganancia'].sum()
-                    st.metric("3. Ganancia Total", f"${ganancia_total:,.0f}", 
-                             delta=f"{ganancia_total/ventas_totales:.1%} margen" if 'ventas_totales' in locals() else None)
-                
-                elif i == 2 and 'Clientes' in df_clean.columns:
-                    clientes_unicos = df_clean['Clientes'].nunique()
-                    st.metric("5. Clientes Únicos", f"{clientes_unicos:,}")
-                
-                elif i == 3 and 'Costo' in df_clean.columns:
-                    costo_promedio = df_clean['Costo'].mean()
-                    st.metric("7. Costo Promedio", f"${costo_promedio:,.2f}")
-            
-            with cols[1]:
-                if i == 0 and 'Ventas' in df_clean.columns:
-                    ventas_promedio = df_clean['Ventas'].mean()
-                    st.metric("2. Ventas Promedio", f"${ventas_promedio:,.2f}")
-                
-                elif i == 1 and 'Unidades' in df_clean.columns:
-                    unidades_vendidas = df_clean['Unidades'].sum()
-                    st.metric("4. Unidades Vendidas", f"{unidades_vendidas:,}")
-                
-                elif i == 2 and 'Ventas' in df_clean.columns and len(df_clean) > 1:
-                    crecimiento = (df_clean['Ventas'].iloc[-1] - df_clean['Ventas'].iloc[0]) / df_clean['Ventas'].iloc[0]
-                    st.metric("6. Crecimiento Ventas", f"{crecimiento:.1%}")
-                
-                elif i == 3 and 'Rating' in df_clean.columns:
-                    rating_promedio = df_clean['Rating'].mean()
-                    st.metric("8. Satisfacción Cliente", f"{rating_promedio:.1f}/5")
+        # Fila 1 de KPIs
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            total_fact = df['Total Facturación'].sum()/1000
+            st.metric("1. Facturación Total (M€)", f"{total_fact:,.1f}M€")
+        with col2:
+            avg_fact = df['Total Facturación'].mean()/1000
+            st.metric("2. Facturación Mensual Promedio", f"{avg_fact:,.1f}K€")
+        with col3:
+            total_pacientes = df['No. De Pacientes CCEE'].sum()
+            st.metric("3. Total Pacientes CCEE", f"{total_pacientes:,}")
+        with col4:
+            total_cirugias = df['No. De Intervenciones Quirúrgicas'].sum()
+            st.metric("4. Total Intervenciones Quirúrgicas", f"{total_cirugias:,}")
+        
+        # Fila 2 de KPIs
+        col5, col6, col7, col8 = st.columns(4)
+        with col5:
+            total_urgencias = df['No. Urgencias Mes'].sum()
+            st.metric("5. Total Urgencias", f"{total_urgencias:,}")
+        with col6:
+            modulos_dia = df['Módulos Totales x día'].mean()
+            st.metric("6. Módulos Diarios Promedio", f"{modulos_dia:.1f}")
+        with col7:
+            precio_medio_consulta = df['Precio Medio Consultas CCEE'].mean()
+            st.metric("7. Precio Medio Consulta (€)", f"{precio_medio_consulta:.2f}€")
+        with col8:
+            precio_medio_cirugia = df['Precio Medio HHMM Quirúrgicas'].mean()
+            st.metric("8. Precio Medio Cirugía (€)", f"{precio_medio_cirugia:,.0f}€")
         
         # ==============================================
         # SECCIÓN DE GRÁFICOS (8 visualizaciones)
@@ -87,77 +73,104 @@ if uploaded_file:
         st.markdown("---")
         st.header("📊 Visualizaciones")
         
-        # Gráfico 1: Ventas por categoría (Barras)
-        if 'Categoría' in df_clean.columns and 'Ventas' in df_clean.columns:
-            fig1 = px.bar(df_clean, x='Categoría', y='Ventas', 
-                         title="1. Ventas por Categoría", color='Categoría')
-            st.plotly_chart(fig1, use_container_width=True)
+        # Gráfico 1: Evolución mensual de facturación
+        fig1 = px.line(df, x='Fecha', y=['Total Facturación', 'Facturación CCEE VITHAS', 
+                                       'Facturación Quirúrgico VITHAS', 'Facturación Urgencias VITHAS'],
+                     title="1. Evolución Mensual de Facturación (€)",
+                     labels={'value': 'Facturación (€)', 'variable': 'Tipo'},
+                     height=500)
+        st.plotly_chart(fig1, use_container_width=True)
         
-        # Gráfico 2: Serie temporal de ventas (Línea)
-        if 'Fecha' in df_clean.columns and 'Ventas' in df_clean.columns:
-            fig2 = px.line(df_clean, x='Fecha', y='Ventas', 
-                          title="2. Tendencia de Ventas",
-                          markers=True)
-            st.plotly_chart(fig2, use_container_width=True)
+        # Gráfico 2: Comparación VITHAS vs OSA
+        fig2 = go.Figure()
+        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación CCEE VITHAS'], name='CCEE VITHAS'))
+        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación CCEE OSA (80%)'], name='CCEE OSA (80%)'))
+        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación Quirúrgico VITHAS'], name='Quirúrgico VITHAS'))
+        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación Quirúrgico OSA (90%)'], name='Quirúrgico OSA (90%)'))
+        fig2.update_layout(barmode='group', title='2. Comparación Facturación VITHAS vs OSA',
+                          yaxis_title='Facturación (€)')
+        st.plotly_chart(fig2, use_container_width=True)
         
-        # Gráfico 3: Distribución de ventas (Histograma)
-        if 'Ventas' in df_clean.columns:
-            fig3 = px.histogram(df_clean, x='Ventas', 
-                              title="3. Distribución de Ventas",
-                              nbins=20)
-            st.plotly_chart(fig3, use_container_width=True)
+        # Gráfico 3: Pacientes vs Módulos
+        fig3 = px.scatter(df, x='No. De Pacientes CCEE', y='Módulos Totales x día',
+                         size='Pacientes x Módulo (Cada 15 min)', color='Módulos Totales x día',
+                         title="3. Relación Pacientes vs Módulos Diarios",
+                         labels={'No. De Pacientes CCEE': 'N° Pacientes', 'Módulos Totales x día': 'Módulos/Día'})
+        st.plotly_chart(fig3, use_container_width=True)
         
-        # Gráfico 4: Relación ventas vs. ganancia (Dispersión)
-        if 'Ventas' in df_clean.columns and 'Ganancia' in df_clean.columns:
-            fig4 = px.scatter(df_clean, x='Ventas', y='Ganancia',
-                            title="4. Ventas vs. Ganancia",
-                            trendline="ols")
-            st.plotly_chart(fig4, use_container_width=True)
+        # Gráfico 4: Distribución de urgencias
+        fig4 = px.bar(df, x='Fecha', y=['Urgencias días Trauma (15%)', 'Urgencias días totales Vitha'],
+                     title="4. Distribución de Urgencias por Tipo",
+                     labels={'value': 'N° Urgencias', 'variable': 'Tipo'})
+        st.plotly_chart(fig4, use_container_width=True)
         
-        # Gráfico 5: Composición de ventas (Pie)
-        if 'Categoría' in df_clean.columns and 'Ventas' in df_clean.columns:
-            fig5 = px.pie(df_clean, names='Categoría', values='Ventas',
-                         title="5. Composición de Ventas por Categoría")
-            st.plotly_chart(fig5, use_container_width=True)
+        # Gráfico 5: Composición de facturación
+        fact_composicion = df[['Facturación CCEE VITHAS', 'Facturación Quirúrgico VITHAS', 
+                             'Facturación Urgencias VITHAS']].sum()
+        fig5 = px.pie(values=fact_composicion, names=fact_composicion.index,
+                     title="5. Composición de Facturación VITHAS",
+                     hole=0.4)
+        st.plotly_chart(fig5, use_container_width=True)
         
-        # Gráfico 6: Mapa de calor de correlaciones
-        numeric_df = df_clean.select_dtypes(include=['number'])
-        if len(numeric_df.columns) > 1:
-            corr = numeric_df.corr()
-            fig6 = go.Figure(data=go.Heatmap(
-                z=corr.values,
-                x=corr.columns,
-                y=corr.columns,
-                colorscale='Blues',
-                zmin=-1,
-                zmax=1
-            ))
-            fig6.update_layout(title="6. Correlación entre Variables Numéricas")
-            st.plotly_chart(fig6, use_container_width=True)
+        # Gráfico 6: Correlaciones entre variables
+        numeric_df = df.select_dtypes(include=['number'])
+        corr = numeric_df.corr()
+        fig6 = go.Figure(data=go.Heatmap(
+            z=corr.values,
+            x=corr.columns,
+            y=corr.columns,
+            colorscale='Blues',
+            zmin=-1,
+            zmax=1
+        ))
+        fig6.update_layout(title="6. Correlación entre Variables Numéricas",
+                          height=600)
+        st.plotly_chart(fig6, use_container_width=True)
         
-        # Gráfico 7: Boxplot de ventas por categoría
-        if 'Categoría' in df_clean.columns and 'Ventas' in df_clean.columns:
-            fig7 = px.box(df_clean, x='Categoría', y='Ventas',
-                         title="7. Distribución de Ventas por Categoría")
-            st.plotly_chart(fig7, use_container_width=True)
+        # Gráfico 7: Precios medios comparativos
+        fig7 = go.Figure()
+        fig7.add_trace(go.Scatter(x=df['Fecha'], y=df['Precio Medio Consultas CCEE'], 
+                                name='Consulta', line=dict(color='green')))
+        fig7.add_trace(go.Scatter(x=df['Fecha'], y=df['Precio Medio HHMM Quirúrgicas'], 
+                                name='Cirugía', line=dict(color='blue')))
+        fig7.add_trace(go.Scatter(x=df['Fecha'], y=df['Precio Medio Urgencias'], 
+                                name='Urgencia', line=dict(color='red')))
+        fig7.update_layout(title="7. Evolución de Precios Medios (€)",
+                         yaxis_title="Precio (€)")
+        st.plotly_chart(fig7, use_container_width=True)
         
-        # Gráfico 8: Gráfico de áreas apiladas
-        if 'Fecha' in df_clean.columns and 'Categoría' in df_clean.columns and 'Ventas' in df_clean.columns:
-            pivot_df = df_clean.pivot_table(index='Fecha', columns='Categoría', values='Ventas', aggfunc='sum').fillna(0)
-            fig8 = px.area(pivot_df, 
-                          title="8. Ventas Acumuladas por Categoría")
-            st.plotly_chart(fig8, use_container_width=True)
+        # Gráfico 8: Módulos por turno
+        fig8 = px.area(df, x='Fecha', y=['Módulos Mañana', 'Módulos Tarde'],
+                      title="8. Distribución de Módulos por Turno",
+                      labels={'value': 'N° Módulos', 'variable': 'Turno'})
+        st.plotly_chart(fig8, use_container_width=True)
+        
+        # ==============================================
+        # SECCIÓN DE ANÁLISIS ADICIONAL
+        # ==============================================
+        st.markdown("---")
+        st.header("📌 Resumen Ejecutivo")
+        
+        with st.expander("🔎 Conclusiones Clave"):
+            st.write(f"""
+            - **Facturación Total Proyectada**: {total_fact:,.1f} millones de euros
+            - **Promedio Mensual**: {avg_fact:,.1f} mil euros
+            - **Capacidad de Atención**: 
+                - {total_pacientes:,} pacientes en consultas externas
+                - {total_cirugias:,} intervenciones quirúrgicas
+                - {total_urgencias:,} atenciones de urgencia
+            - **Distribución Facturación**:
+                - Consultas: {(fact_composicion[0]/total_fact/1000)*100:.1f}%
+                - Quirúrgico: {(fact_composicion[1]/total_fact/1000)*100:.1f}%
+                - Urgencias: {(fact_composicion[2]/total_fact/1000)*100:.1f}%
+            """)
     
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {str(e)}")
         st.write("ℹ️ Posibles soluciones:")
-        st.write("- Verifica que el archivo tenga la estructura correcta")
-        st.write("- Asegúrate de que los nombres de columnas coincidan exactamente")
-        st.write("- Revisa que los datos numéricos no contengan caracteres no válidos")
+        st.write("- Verifica que el archivo tenga la hoja 'Proyeccion 2026'")
+        st.write("- Asegúrate de que las fórmulas de Excel se hayan calculado")
+        st.write("- Revisa que no haya celdas con errores en los datos numéricos")
 
 else:
-    st.info("ℹ️ Por favor, sube un archivo Excel para comenzar el análisis.")
-    st.markdown("### 📌 Estructura recomendada:")
-    st.write("- Los encabezados deben estar en la primera fila")
-    st.write("- Los datos deben estar organizados en columnas")
-    st.write("- Las fechas deben estar en formato reconocible (YYYY-MM-DD)")
+    st.info("ℹ️ Por favor, sube el archivo 'Proyeccion 3.xlsx' para comenzar el análisis.")
