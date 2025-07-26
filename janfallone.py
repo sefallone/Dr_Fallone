@@ -9,7 +9,6 @@ st.set_page_config(page_title="Comparativo VITHAS-OSA 2026", layout="wide", page
 
 # Título
 st.title("🏥 Dashboard Comparativo VITHAS vs OSA 2026")
-st.markdown("### Análisis de Facturación y Procedimientos")
 
 # Carga de archivo
 uploaded_file = st.file_uploader("Sube tu archivo 'Proyeccion 3.xlsx'", type="xlsx")
@@ -19,15 +18,21 @@ if uploaded_file:
         # 1. Leer datos
         df = pd.read_excel(uploaded_file, sheet_name="Proyeccion 2026")
         
+        # Verificar nombres de columnas
+        st.write("Columnas encontradas:", df.columns.tolist())
+        
+        # Limpieza de nombres de columnas (elimina espacios extra)
+        df.columns = df.columns.str.strip()
+        
         # Limpieza de datos
         df['Fecha'] = pd.to_datetime(df['Fecha']).dt.date
         numeric_cols = df.select_dtypes(include=['number']).columns
         for col in numeric_cols:
             df[col] = pd.to_numeric(df[col], errors='coerce')
         
-        # Cálculo de totales por entidad
+        # Cálculo de totales por entidad (con nombres de columnas corregidos)
         df['Total VITHAS'] = df['Facturación CCEE VITHAS'] + df['Facturación Quirúrgico VITHAS'] + df['Facturación Urgencias VITHAS']
-        df['Total OSA'] = df['Facturación CCEE OSA (80%)'] + df['Facturación Quirúrgico OSA (90%)'] + df['Facturación Urgencias OSA (50%)']
+        df['Total OSA'] = df['Facturación CCEE OSA (80%)'] + df['Facturación Quirúrgico OSA (90%)'] + df.get('Facturación Urgencias OSA (50%)', df.get('Facturación Urgencias OSA (50% )', 0))
         df['Diferencia'] = df['Total VITHAS'] - df['Total OSA']
         
         # Totales anuales
@@ -179,12 +184,10 @@ if uploaded_file:
             - Menor diferencia en {df.loc[df['Diferencia'].idxmin(), 'Fecha'].strftime('%B')} (€{df['Diferencia'].min()/1000:,.1f}K)
             """)
     
-    except Exception as e:
+     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {str(e)}")
-        st.write("ℹ️ Posibles soluciones:")
-        st.write("- Verifica que el archivo tenga la hoja 'Proyeccion 2026'")
-        st.write("- Asegúrate de que las fórmulas de Excel se hayan calculado")
-        st.write("- Revisa que no haya celdas con errores en los datos numéricos")
+        st.write("ℹ️ Verifica que los nombres de columnas coincidan exactamente:")
+        st.write(df.columns.tolist())
 
 else:
     st.info("ℹ️ Por favor, sube el archivo 'Proyeccion 3.xlsx' para comenzar el análisis.")
