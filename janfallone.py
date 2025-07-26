@@ -5,14 +5,14 @@ from datetime import datetime
 
 def load_and_process_data(uploaded_file):
     try:
-        # Leer el archivo Excel manteniendo los nombres originales
+        # Leer el archivo Excel manteniendo los espacios en nombres de columnas
         df = pd.read_excel(uploaded_file, sheet_name="Proyeccion 2026")
         
-        # Mostrar columnas disponibles para diagnóstico
-        st.write("🔍 Columnas encontradas en el archivo:")
-        st.write(df.columns.tolist())
+        # Mostrar columnas exactas para diagnóstico
+        st.write("🔍 Columnas encontradas (exactas con espacios):")
+        st.write([f"'{col}'" for col in df.columns.tolist()])
         
-        # Mapeo flexible de columnas
+        # Mapeo completo con todas las variantes posibles
         column_mapping = {
             'Fecha': ['Fecha'],
             'Total Facturación': ['Total Facturación', 'total_facturacion'],
@@ -21,61 +21,74 @@ def load_and_process_data(uploaded_file):
             'No. De Pacientes CCEE': ['No. De Pacientes CCEE', 'no._de_pacientes_ccee'],
             'Facturación Quirúrgico VITHAS': ['Facturación Quirúrgico VITHAS', 'facturacion_quirúrgico_vithas'],
             'Facturación Quirúrgico OSA (90%)': ['Facturación Quirúrgico OSA (90%)', 'facturacion_quirúrgico_osa_90porc'],
-            'Facturación Urgencias OSA (50%)': ['Facturación Urgencias OSA (50%)', 'facturacion_urgencias_osa_50porc'],
+            'Facturación Urgencias OSA (50%)': [
+                'Facturación Urgencias OSA (50%)', 
+                'facturacion_urgencias_osa_50porc',
+                'facturacion_urgencias_osa_50porc ',  # Con espacio al final
+                'Facturación Urgencias OSA (50% )'   # Con espacio antes del paréntesis
+            ],
             'Facturación Urgencias VITHAS': ['Facturación Urgencias VITHAS', 'facturacion_urgencias_vithas']
         }
         
-        # Encontrar los nombres reales de las columnas
+        # Encontrar coincidencias exactas
         actual_columns = {}
         for standard_name, possible_names in column_mapping.items():
+            found = False
             for name in possible_names:
+                # Buscar coincidencia exacta incluyendo espacios
                 if name in df.columns:
                     actual_columns[standard_name] = name
+                    found = True
                     break
-            else:
-                st.error(f"❌ No se encontró ninguna variante de: {standard_name}")
+            
+            if not found:
+                # Intentar coincidencia insensible a espacios y mayúsculas
+                for col in df.columns:
+                    if col.strip().lower() in [n.strip().lower() for n in possible_names]:
+                        actual_columns[standard_name] = col
+                        found = True
+                        break
+            
+            if not found:
+                st.error(f"❌ No se encontró: {standard_name}")
                 st.error(f"Variantes probadas: {possible_names}")
+                st.error(f"Columnas disponibles: {list(df.columns)}")
                 return None
         
-        # Renombrar columnas a nombres estándar
+        # Renombrar columnas
         df.rename(columns={v: k for k, v in actual_columns.items()}, inplace=True)
         
-        # Verificar que tenemos todas las columnas necesarias
+        # Verificación final
         required_columns = list(column_mapping.keys())
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        
-        if missing_columns:
-            st.error("❌ Columnas faltantes después del mapeo:")
-            st.error(missing_columns)
+        missing = [col for col in required_columns if col not in df.columns]
+        if missing:
+            st.error(f"❌ Columnas faltantes: {missing}")
             return None
         
         # Limpieza de datos
         df['Fecha'] = pd.to_datetime(df['Fecha']).dt.date
-        
-        # Convertir columnas numéricas
-        numeric_cols = [col for col in required_columns if col != 'Fecha']
-        for col in numeric_cols:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-            if df[col].isnull().any():
-                st.warning(f"⚠️ La columna {col} contiene valores no numéricos")
+        for col in required_columns:
+            if col != 'Fecha':
+                df[col] = pd.to_numeric(df[col], errors='coerce')
         
         return df
     
     except Exception as e:
-        st.error(f"❌ Error crítico: {str(e)}")
+        st.error(f"❌ Error: {str(e)}")
         return None
 
-# Interfaz de usuario
-st.title("🏥 Dashboard de Proyecciones Médicas 2026")
+# Interfaz
+st.title("🏥 Dashboard de Proyecciones Médicas")
 
-uploaded_file = st.file_uploader("Sube tu archivo 'Proyeccion 3.xlsx'", type=["xlsx"])
+uploaded_file = st.file_uploader("Sube 'Proyeccion 3.xlsx'", type=["xlsx"])
 
 if uploaded_file:
     df = load_and_process_data(uploaded_file)
     
     if df is not None:
         st.success("✅ Datos cargados correctamente!")
-        st.dataframe(df.head())
+        st.write(df.head())
+        
         
         # ==============================================
         # ANÁLISIS Y VISUALIZACIONES
