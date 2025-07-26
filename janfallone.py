@@ -35,7 +35,7 @@ with st.expander("📋 Ingresar Facturación por Especialidad"):
     ccee_OSB = st.number_input("Hombro y Codo (CCEE)", min_value=0.0, step=100.0)
     ccee_SMOB = st.number_input("Rodilla (CCEE)", min_value=0.0, step=100.0)
     ccee_JPP = st.number_input("Pie y Tobillo (CCEE)", min_value=0.0, step=100.0)
-    facturacion_ccee = ccee_OSB + ccee_SMOD + ccee_JPP
+    facturacion_ccee = ccee_OSB + ccee_SMOB + ccee_JPP
 
     st.subheader("🔪 Facturación Quirúrgica")
     q_OSB = st.number_input("Hombro y Codo (Q)", min_value=0.0, step=100.0)
