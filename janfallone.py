@@ -75,18 +75,11 @@ jpp_p = osa_beneficios * 0.225
 total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urgencias
 
 total_distribuciones = {
-    "VITHAS": vithas_total,
-    "OSA": osa_total,
-    "OSA A DISTRIBUIR": osa_restante,
-    "GF (55% de OSA)": gf,
-    "JP (22.5% de OSA)": jp,
-    "JPP (22.5% de OSA)": jpp_p,
+    "OSA": osa_beneficios,
     "OSB (Hombro)": osa_OSB,
     "SMOB (Rodilla)": osa_SMOB,
-    "JPP (Pie)": osa_JPP,
-    "Total CCEE": facturacion_ccee,
-    "Total Quirúrgico": facturacion_quirurgico,
-    "Total Urgencias": facturacion_urgencias
+    "JPP (Pie)": osa_JPP
+    
 }
 
 st.markdown("---")
@@ -132,7 +125,7 @@ fig = px.pie(
     names=list(total_distribuciones.keys()),
     values=list(total_distribuciones.values()),
     title="Distribución Total de Facturación",
-    color_discrete_sequence=["#003A6F", "#2E8B57", "#1ABC9C", "#F4D03F", "#E67E22", "#1E8449", "#117A65", "#0E6655", "#566573", "#5D6D7E", "#85929E"]
+    color_discrete_sequence=["#003A6F", "#2E8B57", "#1ABC9C", "#F4D03F"]
 )
 fig.update_traces(textposition="inside", textinfo="percent+label")
 st.plotly_chart(fig, use_container_width=True)
