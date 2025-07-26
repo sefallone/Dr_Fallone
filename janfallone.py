@@ -115,8 +115,8 @@ with st.container():
     with d3:
         st.warning(f"JPP (Pie y Tobillo): {osa_JPP:,.2f} €")
 
-for k, v in total_distribuciones.items():
-    st.write(f"{k}: {v:,.2f} €")
+#for k, v in total_distribuciones.items():
+#    st.write(f"{k}: {v:,.2f} €")
 
 # --- GRÁFICO ---
 st.markdown("---")
