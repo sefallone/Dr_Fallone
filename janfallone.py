@@ -42,6 +42,11 @@ yo_rodilla = osa_rodilla * mi_porcentaje_decimal
 yo_pie = osa_pie * mi_porcentaje_decimal
 yo_total = yo_hombro + yo_rodilla + yo_pie
 
+# --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
+gf = yo_total * 0.55
+jp = yo_total * 0.225
+jpp_p = yo_total * 0.225
+
 # El resto de OSA se divide:
 osb = osa_hombro - yo_hombro
 smob = osa_rodilla - yo_rodilla
@@ -58,6 +63,9 @@ total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urge
 total_distribuciones = {
     "VITHAS": vithas_total,
     "Tú (OSA)": yo_total,
+    "GF (55% de tu OSA)": gf,
+    "JP (22.5% de tu OSA)": jp,
+    "JPP Pers. (22.5% de tu OSA)": jpp_p,
     "OSB (Hombro)": osb,
     "SMOB (Rodilla)": smob,
     "JPP (Pie)": jpp,
@@ -68,6 +76,22 @@ total_distribuciones = {
 
 st.markdown("---")
 st.header("📊 Totales de Distribución")
+k1, k2, k3 = st.columns(3)
+with k1:
+    st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
+with k2:
+    st.metric("🟩 Tú (OSA)", f"{yo_total:,.2f} €")
+with k3:
+    st.metric("🔺 Total OSA Repartido", f"{osa_total - yo_total:,.2f} €")
+
+d1, d2, d3 = st.columns(3)
+with d1:
+    st.success(f"OSB (Hombro): {osb:,.2f} €")
+with d2:
+    st.info(f"SMOB (Rodilla): {smob:,.2f} €")
+with d3:
+    st.warning(f"JPP (Pie y Tobillo): {jpp:,.2f} €")
+
 for k, v in total_distribuciones.items():
     st.write(f"{k}: {v:,.2f} €")
 
@@ -78,7 +102,7 @@ fig = px.pie(
     names=list(total_distribuciones.keys()),
     values=list(total_distribuciones.values()),
     title="Distribución Total de Facturación",
-    color_discrete_sequence=["#003A6F", "#2E8B57", "#1E8449", "#117A65", "#0E6655", "#566573", "#5D6D7E", "#85929E"]
+    color_discrete_sequence=["#003A6F", "#2E8B57", "#1ABC9C", "#F4D03F", "#E67E22", "#1E8449", "#117A65", "#0E6655", "#566573", "#5D6D7E", "#85929E"]
 )
 fig.update_traces(textposition="inside", textinfo="percent+label")
 st.plotly_chart(fig, use_container_width=True)
