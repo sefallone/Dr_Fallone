@@ -98,18 +98,26 @@ with st.container():
          
 
 with st.container():
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2 = st.columns(2)
     with m1:
         st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
     with m2:
         st.metric("🟩 Total OSA", f"{osa_total:,.2f} €")
-    with m3:
+    
+
+with st.container():
+    z1, z2, z3, z4, z5 = st.columns(5)
+    with z1:
         st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
-    with m4:
+    with z2:
+        st.metric("🔺 Giancarlo Fallone", f"{gp:,.2f} €")
+    with z3:
+        st.metric("🔺 Jordi Puigdellívol", f"{jp:,.2f} €")
+    with z4:
+        st.metric("🔺 Juan Pablo Ortega", f"{jpp_p:,.2f} €")
+    with z5:
         st.metric("🔺 Total OSA DISTRIBUIR", f"{osa_restante:,.2f} €")
         
-        
-
 with st.container():
     d1, d2, d3 = st.columns(3)
     with d1:
