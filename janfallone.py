@@ -85,12 +85,13 @@ with col2:
 
 
 # --- GRÁFICO GLOBAL ---
-st.subheader("📉 Distribución Global")
+st.subheader("📉 Distribución Total (VITHAS + OSA Desglosado)")
 fig = px.pie(
-    names=["VITHAS", "Tú", "OSB", "SMOB", "JPP"],
-    values=[vithas_total, mi_parte_osa, osb, smob, jpp],
-    title="Distribución General de Facturación",
+    names=["VITHAS", "Tú (OSA)", "OSB", "SMOB", "JPP"],
+    values=[vithas_total, yo_total, osb, smob, jpp],
+    title="Distribución General",
     color_discrete_sequence=["#3498db", "#2ecc71", "#e67e22", "#9b59b6", "#f39c12"]
 )
 st.plotly_chart(fig)
+
 
