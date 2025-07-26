@@ -77,6 +77,7 @@ total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urge
 total_distribuciones = {
     "VITHAS": vithas_total,
     "OSA": osa_total,
+    "OSA A DISTRIBUIR": osa_restante,
     "GF (55% de OSA)": gf,
     "JP (22.5% de OSA)": jp,
     "JPP (22.5% de OSA)": jpp_p,
@@ -91,7 +92,7 @@ total_distribuciones = {
 st.markdown("---")
 st.header("📊 Totales de Distribución")
 with st.container():
-    k0, k1, k2, k3 = st.columns(4)
+    k0, k1, k2, k3, k4 = st.columns(5)
     with k0:
         st.metric("💰 Total Facturación", f"{total_facturacion:,.2f} €")
     with k1:
@@ -100,6 +101,8 @@ with st.container():
         st.metric("🟩  OSA", f"{osa_total:,.2f} €")
     with k3:
         st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
+    with k4:
+        st.metric("🔺 OSA A DISTRIBUIR", f"{osa_restante:,.2f} €")
 
 with st.container():
     m1, m2, m3 = st.columns(3)
