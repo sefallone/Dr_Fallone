@@ -3,136 +3,172 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 
-def load_and_process_data(uploaded_file):
+# Configuración de la página
+st.set_page_config(page_title="Comparativo VITHAS-OSA", layout="wide")
+
+# Título
+st.title("🏥 Dashboard Comparativo VITHAS vs OSA")
+st.markdown("### Análisis de Diferencias Porcentuales")
+
+# Carga y procesamiento de datos
+def load_data(uploaded_file):
     try:
-        # Leer el archivo Excel manteniendo los espacios en nombres de columnas
         df = pd.read_excel(uploaded_file, sheet_name="Proyeccion 2026")
         
-        # Mostrar columnas exactas para diagnóstico
-        st.write("🔍 Columnas encontradas (exactas con espacios):")
-        st.write([f"'{col}'" for col in df.columns.tolist()])
+        # Limpieza de nombres de columnas
+        df.columns = df.columns.str.strip()
         
-        # Mapeo completo con todas las variantes posibles
-        column_mapping = {
-            'Fecha': ['Fecha'],
-            'Total Facturación': ['Total Facturación', 'total_facturacion'],
-            'Facturación CCEE VITHAS': ['Facturación CCEE VITHAS', 'facturacion_ccee_vithas'],
-            'Facturación CCEE OSA (80%)': ['Facturación CCEE OSA (80%)', 'facturacion_ccee_osa_80porc'],
-            'No. De Pacientes CCEE': ['No. De Pacientes CCEE', 'no._de_pacientes_ccee'],
-            'Facturación Quirúrgico VITHAS': ['Facturación Quirúrgico VITHAS', 'facturacion_quirúrgico_vithas'],
-            'Facturación Quirúrgico OSA (90%)': ['Facturación Quirúrgico OSA (90%)', 'facturacion_quirúrgico_osa_90porc'],
-            'Facturación Urgencias OSA (50%)': [
-                'Facturación Urgencias OSA (50%)', 
-                'facturacion_urgencias_osa_50porc',
-                'facturacion_urgencias_osa_50porc ',  # Con espacio al final
-                'Facturación Urgencias OSA (50% )'   # Con espacio antes del paréntesis
-            ],
-            'Facturación Urgencias VITHAS': ['Facturación Urgencias VITHAS', 'facturacion_urgencias_vithas']
+        # Columnas requeridas (ajustadas a tu archivo)
+        required_columns = {
+            'Fecha': 'Fecha',
+            'Total Facturación': 'Total Facturación',
+            'Facturación CCEE VITHAS': 'Facturación CCEE VITHAS',
+            'Facturación CCEE OSA (80%)': 'Facturación CCEE OSA (80%)',
+            'Facturación Quirúrgico VITHAS': 'Facturación Quirúrgico VITHAS',
+            'Facturación Quirúrgico OSA (90%)': 'Facturación Quirúrgico OSA (90%)',
+            'Facturación Urgencias VITHAS': 'Facturación Urgencias VITHAS',
+            'Facturación Urgencias OSA (50%)': 'Facturación Urgencias OSA (50%)'
         }
         
-        # Encontrar coincidencias exactas
-        actual_columns = {}
-        for standard_name, possible_names in column_mapping.items():
-            found = False
-            for name in possible_names:
-                # Buscar coincidencia exacta incluyendo espacios
-                if name in df.columns:
-                    actual_columns[standard_name] = name
-                    found = True
-                    break
-            
-            if not found:
-                # Intentar coincidencia insensible a espacios y mayúsculas
-                for col in df.columns:
-                    if col.strip().lower() in [n.strip().lower() for n in possible_names]:
-                        actual_columns[standard_name] = col
-                        found = True
-                        break
-            
-            if not found:
-                st.error(f"❌ No se encontró: {standard_name}")
-                st.error(f"Variantes probadas: {possible_names}")
-                st.error(f"Columnas disponibles: {list(df.columns)}")
-                return None
-        
-        # Renombrar columnas
-        df.rename(columns={v: k for k, v in actual_columns.items()}, inplace=True)
-        
-        # Verificación final
-        required_columns = list(column_mapping.keys())
-        missing = [col for col in required_columns if col not in df.columns]
+        # Verificar columnas
+        missing = [k for k, v in required_columns.items() if v not in df.columns]
         if missing:
-            st.error(f"❌ Columnas faltantes: {missing}")
+            st.error(f"Columnas faltantes: {missing}")
+            st.write("Columnas disponibles:", df.columns.tolist())
             return None
-        
-        # Limpieza de datos
+            
+        # Convertir tipos de datos
         df['Fecha'] = pd.to_datetime(df['Fecha']).dt.date
-        for col in required_columns:
+        for col in required_columns.values():
             if col != 'Fecha':
                 df[col] = pd.to_numeric(df[col], errors='coerce')
         
         return df
     
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"Error al cargar datos: {str(e)}")
         return None
 
-# Interfaz
-st.title("🏥 Dashboard de Proyecciones Médicas")
+# Cálculo de KPIs comparativos
+def calculate_kpis(df):
+    # Totales por categoría
+    resultados = {
+        'Total VITHAS': df['Facturación CCEE VITHAS'].sum() + 
+                       df['Facturación Quirúrgico VITHAS'].sum() + 
+                       df['Facturación Urgencias VITHAS'].sum(),
+        
+        'Total OSA': df['Facturación CCEE OSA (80%)'].sum() + 
+                    df['Facturación Quirúrgico OSA (90%)'].sum() + 
+                    df['Facturación Urgencias OSA (50%)'].sum(),
+        
+        'CCEE VITHAS': df['Facturación CCEE VITHAS'].sum(),
+        'CCEE OSA': df['Facturación CCEE OSA (80%)'].sum(),
+        
+        'Quirúrgico VITHAS': df['Facturación Quirúrgico VITHAS'].sum(),
+        'Quirúrgico OSA': df['Facturación Quirúrgico OSA (90%)'].sum(),
+        
+        'Urgencias VITHAS': df['Facturación Urgencias VITHAS'].sum(),
+        'Urgencias OSA': df['Facturación Urgencias OSA (50%)'].sum()
+    }
+    
+    # Cálculo de diferencias porcentuales
+    resultados['Diferencia % Total'] = ((resultados['Total VITHAS'] / resultados['Total OSA'] - 1) * 100
+    resultados['Diferencia % CCEE'] = ((resultados['CCEE VITHAS'] / resultados['CCEE OSA'] - 1) * 100
+    resultados['Diferencia % Quirúrgico'] = ((resultados['Quirúrgico VITHAS'] / resultados['Quirúrgico OSA'] - 1) * 100
+    resultados['Diferencia % Urgencias'] = ((resultados['Urgencias VITHAS'] / resultados['Urgencias OSA'] - 1) * 100
+    
+    return resultados
 
-uploaded_file = st.file_uploader("Sube 'Proyeccion 3.xlsx'", type=["xlsx"])
+# Interfaz principal
+uploaded_file = st.file_uploader("Sube tu archivo Excel", type=["xlsx"])
 
 if uploaded_file:
-    df = load_and_process_data(uploaded_file)
+    df = load_data(uploaded_file)
     
     if df is not None:
-        st.success("✅ Datos cargados correctamente!")
-        st.write(df.head())
-        
+        # Calcular KPIs
+        kpis = calculate_kpis(df)
         
         # ==============================================
-        # ANÁLISIS Y VISUALIZACIONES
+        # SECCIÓN DE KPIs COMPARATIVOS
         # ==============================================
+        st.header("📊 KPIs Comparativos")
         
-        st.header("📊 KPIs Clave")
+        # Fila 1 - Totales
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Facturación Total VITHAS", f"€{kpis['Total VITHAS']:,.0f}")
+        col2.metric("Facturación Total OSA", f"€{kpis['Total OSA']:,.0f}")
+        col3.metric("Diferencia % Total", 
+                   f"{kpis['Diferencia % Total']:.1f}%",
+                   delta=f"{kpis['Diferencia % Total']:.1f}%")
         
-        # 1. Cálculo de totales
-        total_vithas = df['Facturación CCEE VITHAS'].sum() + \
-                      df['Facturación Quirúrgico VITHAS'].sum() + \
-                      df['Facturación Urgencias VITHAS'].sum()
+        # Fila 2 - Por categoría
+        st.subheader("Diferencias por Categoría")
         
-        total_osa = df['Facturación CCEE OSA (80%)'].sum() + \
-                   df['Facturación Quirúrgico OSA (90%)'].sum() + \
-                   df['Facturación Urgencias OSA (50%)'].sum()
+        col4, col5, col6 = st.columns(3)
+        col4.metric("Consultas Externas", 
+                   f"{kpis['Diferencia % CCEE']:.1f}%",
+                   help="VITHAS vs OSA (80%)")
+        col5.metric("Quirúrgico", 
+                   f"{kpis['Diferencia % Quirúrgico']:.1f}%",
+                   help="VITHAS vs OSA (90%)")
+        col6.metric("Urgencias", 
+                   f"{kpis['Diferencia % Urgencias']:.1f}%",
+                   help="VITHAS vs OSA (50%)")
         
-        # 2. Mostrar KPIs
-        col1, col2 = st.columns(2)
-        col1.metric("Facturación Total VITHAS", f"€{total_vithas:,.0f}")
-        col2.metric("Facturación Total OSA", f"€{total_osa:,.0f}")
+        # ==============================================
+        # GRÁFICOS COMPARATIVOS
+        # ==============================================
+        st.header("📈 Análisis Visual")
         
-        # 3. Gráfico comparativo
-        st.header("📈 Comparativo Mensual")
-        fig = px.line(df, x='Fecha', 
-                     y=['Facturación CCEE VITHAS', 'Facturación CCEE OSA (80%)',
-                        'Facturación Quirúrgico VITHAS', 'Facturación Quirúrgico OSA (90%)',
-                        'Facturación Urgencias VITHAS', 'Facturación Urgencias OSA (50%)'],
-                     title="Evolución de Facturación",
-                     labels={'value': 'Euros (€)', 'variable': 'Categoría'})
-        st.plotly_chart(fig, use_container_width=True)
+        # Gráfico 1: Diferencias porcentuales
+        diff_df = pd.DataFrame({
+            'Categoría': ['Total', 'Consultas', 'Quirúrgico', 'Urgencias'],
+            'Diferencia %': [
+                kpis['Diferencia % Total'],
+                kpis['Diferencia % CCEE'],
+                kpis['Diferencia % Quirúrgico'],
+                kpis['Diferencia % Urgencias']
+            ]
+        })
         
-        # 4. Gráfico de composición
-        st.header("🧩 Composición de Facturación")
-        fig2 = px.pie(
-            names=['CCEE VITHAS', 'Quirúrgico VITHAS', 'Urgencias VITHAS',
-                  'CCEE OSA', 'Quirúrgico OSA', 'Urgencias OSA'],
-            values=[
-                df['Facturación CCEE VITHAS'].sum(),
-                df['Facturación Quirúrgico VITHAS'].sum(),
-                df['Facturación Urgencias VITHAS'].sum(),
-                df['Facturación CCEE OSA (80%)'].sum(),
-                df['Facturación Quirúrgico OSA (90%)'].sum(),
-                df['Facturación Urgencias OSA (50%)'].sum()
-            ],
-            hole=0.3
-        )
+        fig1 = px.bar(diff_df, x='Categoría', y='Diferencia %',
+                     title="Diferencias Porcentuales VITHAS vs OSA",
+                     text_auto='.1f%',
+                     color='Categoría')
+        st.plotly_chart(fig1, use_container_width=True)
+        
+        # Gráfico 2: Evolución mensual de diferencias
+        df['Diferencia % CCEE'] = (df['Facturación CCEE VITHAS'] / df['Facturación CCEE OSA (80%)'] - 1) * 100
+        df['Diferencia % Quirúrgico'] = (df['Facturación Quirúrgico VITHAS'] / df['Facturación Quirúrgico OSA (90%)'] - 1) * 100
+        df['Diferencia % Urgencias'] = (df['Facturación Urgencias VITHAS'] / df['Facturación Urgencias OSA (50%)'] - 1) * 100
+        
+        fig2 = px.line(df, x='Fecha', 
+                      y=['Diferencia % CCEE', 'Diferencia % Quirúrgico', 'Diferencia % Urgencias'],
+                      title="Evolución Mensual de Diferencias Porcentuales",
+                      labels={'value': 'Diferencia %', 'variable': 'Categoría'})
         st.plotly_chart(fig2, use_container_width=True)
+        
+        # ==============================================
+        # TABLA RESUMEN
+        # ==============================================
+        st.header("📋 Resumen Comparativo")
+        
+        summary_data = [
+            ["Total", kpis['Total VITHAS'], kpis['Total OSA'], kpis['Diferencia % Total']],
+            ["Consultas Externas", kpis['CCEE VITHAS'], kpis['CCEE OSA'], kpis['Diferencia % CCEE']],
+            ["Quirúrgico", kpis['Quirúrgico VITHAS'], kpis['Quirúrgico OSA'], kpis['Diferencia % Quirúrgico']],
+            ["Urgencias", kpis['Urgencias VITHAS'], kpis['Urgencias OSA'], kpis['Diferencia % Urgencias']]
+        ]
+        
+        summary_df = pd.DataFrame(
+            summary_data,
+            columns=["Categoría", "VITHAS (€)", "OSA (€)", "Diferencia %"]
+        )
+        
+        # Formatear valores
+        summary_df["VITHAS (€)"] = summary_df["VITHAS (€)"].apply(lambda x: f"€{x:,.0f}")
+        summary_df["OSA (€)"] = summary_df["OSA (€)"].apply(lambda x: f"€{x:,.0f}")
+        summary_df["Diferencia %"] = summary_df["Diferencia %"].apply(lambda x: f"{x:.1f}%")
+        
+        st.dataframe(summary_df, hide_index=True, use_container_width=True)
