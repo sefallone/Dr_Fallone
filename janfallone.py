@@ -84,27 +84,31 @@ total_distribuciones = {
 
 st.markdown("---")
 st.header("📊 Totales de Distribución")
+
 with st.container():
-    k0, k1, k2, k3, k4 = st.columns(5)
+    k0, k1, k2, k3, = st.columns(4)
     with k0:
         st.metric("💰 Total Facturación", f"{total_facturacion:,.2f} €")
     with k1:
-        st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
+        st.metric("CCEE", f"{facturacion_ccee:,.2f} €")
     with k2:
-        st.metric("🟩  OSA", f"{osa_total:,.2f} €")
+        st.metric("Quirúrgico", f"{facturacion_quirurgico:,.2f} €")
     with k3:
-        st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
-    with k4:
-        st.metric("🔺 OSA A DISTRIBUIR", f"{osa_restante:,.2f} €")
+        st.metric("Urgencias", f"{facturacion_urgencias:,.2f} €")
+         
 
 with st.container():
-    m1, m2, m3 = st.columns(3)
+    m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.metric("CCEE", f"{facturacion_ccee:,.2f} €")
+        st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
     with m2:
-        st.metric("Quirúrgico", f"{facturacion_quirurgico:,.2f} €")
+        st.metric("🟩 Total OSA", f"{osa_total:,.2f} €")
     with m3:
-        st.metric("Urgencias", f"{facturacion_urgencias:,.2f} €")
+        st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
+    with m4:
+        st.metric("🔺 Total OSA DISTRIBUIR", f"{osa_restante:,.2f} €")
+        
+        
 
 with st.container():
     d1, d2, d3 = st.columns(3)
