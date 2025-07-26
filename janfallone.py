@@ -33,6 +33,20 @@ osa_hombro = (ccee_hombro * 0.80) + (q_hombro * 0.90) + (u_hombro * 0.50)
 osa_rodilla = (ccee_rodilla * 0.80) + (q_rodilla * 0.90) + (u_rodilla * 0.50)
 osa_pie = (ccee_pie * 0.80) + (q_pie * 0.90) + (u_pie * 0.50)
 
+# --- INPUT: % QUE ME QUEDO DE OSA ---
+mi_porcentaje = st.slider("Selecciona tu porcentaje dentro de OSA (%)", 0, 100, 30)
+mi_porcentaje_decimal = mi_porcentaje / 100
+
+yo_hombro = osa_hombro * mi_porcentaje_decimal
+yo_rodilla = osa_rodilla * mi_porcentaje_decimal
+yo_pie = osa_pie * mi_porcentaje_decimal
+yo_total = yo_hombro + yo_rodilla + yo_pie
+
+# El resto de OSA se divide:
+osb = osa_hombro - yo_hombro
+smob = osa_rodilla - yo_rodilla
+jpp = osa_pie - yo_pie
+
 # --- PARTICION INTERNA OSA ---
 osa_part1 = osa_total * 0.55
 osa_part2 = osa_total * 0.225
@@ -43,7 +57,10 @@ total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urge
 
 total_distribuciones = {
     "VITHAS": vithas_total,
-    "OSA Total": osa_total,
+    "Tú (OSA)": yo_total,
+    "OSB (Hombro)": osb,
+    "SMOB (Rodilla)": smob,
+    "JPP (Pie)": jpp,
     "OSA Parte 1 (55%)": osa_part1,
     "OSA Parte 2 (22.5%)": osa_part2,
     "OSA Parte 3 (22.5%)": osa_part3
@@ -61,7 +78,7 @@ fig = px.pie(
     names=list(total_distribuciones.keys()),
     values=list(total_distribuciones.values()),
     title="Distribución Total de Facturación",
-    color_discrete_sequence=["#003A6F", "#2E8B57", "#1E8449", "#117A65", "#0E6655"]
+    color_discrete_sequence=["#003A6F", "#2E8B57", "#1E8449", "#117A65", "#0E6655", "#566573", "#5D6D7E", "#85929E"]
 )
 fig.update_traces(textposition="inside", textinfo="percent+label")
 st.plotly_chart(fig, use_container_width=True)
