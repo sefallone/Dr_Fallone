@@ -59,9 +59,9 @@ mi_porcentaje_decimal = mi_porcentaje / 100
 
 osa_beneficios = osa_total * mi_porcentaje_decimal   # OSA Total Beneficios
 
-osa_OSB = [(ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)] * (1.00 - mi_porcentaje_decimal)
-osa_SMOB = [(ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)] * (1.00 - mi_porcentaje_decimal)
-osa_JPP = [(ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)] * (1.00 - mi_porcentaje_decimal)
+osa_OSB = [(ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)] * (100 - mi_porcentaje_decimal)
+osa_SMOB = [(ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)] * (100 - mi_porcentaje_decimal)
+osa_JPP = [(ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)] * (100 - mi_porcentaje_decimal)
 
 
 # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
