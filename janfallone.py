@@ -61,9 +61,9 @@ osa_beneficios = osa_total * mi_porcentaje_decimal   # OSA Total Beneficios
 
 osa_restante = osa_total - osa_beneficios
 
-osa_OSB = ((ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)) * osa_restante
-osa_SMOB = ((ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)) * osa_restante
-osa_JPP = ((ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)) * osa_restante
+osa_OSB = ((ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)) * (1 - mi_porcentaje_decimal)
+osa_SMOB = ((ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)) * (1 - mi_porcentaje_decimal)
+osa_JPP = ((ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)) * (1 - mi_porcentaje_decimal)
 
 
 # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
@@ -77,9 +77,9 @@ total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urge
 total_distribuciones = {
     "VITHAS": vithas_total,
     "OSA": osa_total,
-    "GF (55% de tu OSA)": gf,
-    "JP (22.5% de tu OSA)": jp,
-    "JPP Pers. (22.5% de tu OSA)": jpp_p,
+    "GF (55% de OSA)": gf,
+    "JP (22.5% de OSA)": jp,
+    "JPP (22.5% de OSA)": jpp_p,
     "OSB (Hombro)": osa_OSB,
     "SMOB (Rodilla)": osa_SMOB,
     "JPP (Pie)": osa_JPP,
