@@ -61,9 +61,9 @@ osa_beneficios = osa_total * mi_porcentaje_decimal   # OSA Total Beneficios
 
 osa_restante = osa_total - osa_beneficios
 
-osa_OSB = [(ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)] * osa_restante
-osa_SMOB = [(ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)] * osa_restante
-osa_JPP = [(ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)] * osa_restante
+osa_OSB = ((ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)) * osa_restante
+osa_SMOB = ((ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)) * osa_restante
+osa_JPP = ((ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)) * osa_restante
 
 
 # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
