@@ -2,4 +2,4 @@ streamlit
 pandas 
 matplotlib 
 plotly
-altair
+openpyxl
