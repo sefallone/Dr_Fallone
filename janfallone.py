@@ -5,11 +5,11 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # Configuración de la página
-st.set_page_config(page_title="Proyección VITHAS-OSA 2026", layout="wide", page_icon="🏥")
+st.set_page_config(page_title="Comparativo VITHAS-OSA 2026", layout="wide", page_icon="🏥")
 
 # Título
-st.title("🏥 Dashboard de Proyección Médica 2026")
-st.markdown("### Análisis de Facturación, Pacientes y Procedimientos")
+st.title("🏥 Dashboard Comparativo VITHAS vs OSA 2026")
+st.markdown("### Análisis de Facturación y Procedimientos")
 
 # Carga de archivo
 uploaded_file = st.file_uploader("Sube tu archivo 'Proyeccion 3.xlsx'", type="xlsx")
@@ -25,144 +25,158 @@ if uploaded_file:
         for col in numeric_cols:
             df[col] = pd.to_numeric(df[col], errors='coerce')
         
-        # Mostrar datos procesados (opcional)
-        with st.expander("🔍 Ver datos procesados", expanded=False):
-            st.dataframe(df)
-            st.write(f"📝 Forma del dataset: {df.shape}")
-            st.write("📌 Tipos de datos:", df.dtypes)
+        # Cálculo de totales por entidad
+        df['Total VITHAS'] = df['Facturación CCEE VITHAS'] + df['Facturación Quirúrgico VITHAS'] + df['Facturación Urgencias VITHAS']
+        df['Total OSA'] = df['Facturación CCEE OSA (80%)'] + df['Facturación Quirúrgico OSA (90%)'] + df['Facturación Urgencias OSA (50%)']
+        df['Diferencia'] = df['Total VITHAS'] - df['Total OSA']
+        
+        # Totales anuales
+        total_vithas = df['Total VITHAS'].sum()
+        total_osa = df['Total OSA'].sum()
+        diferencia_total = total_vithas - total_osa
+        proporcion = (total_vithas / total_osa) if total_osa != 0 else 0
         
         # ==============================================
-        # SECCIÓN DE KPIs (8 métricas clave)
+        # SECCIÓN DE KPIs COMPARATIVOS
         # ==============================================
         st.markdown("---")
-        st.header("📈 KPIs Principales")
+        st.header("📊 KPIs Comparativos VITHAS vs OSA")
         
-        # Fila 1 de KPIs
-        col1, col2, col3, col4 = st.columns(4)
+        # Fila 1 - Totales
+        col1, col2, col3 = st.columns(3)
         with col1:
-            total_fact = df['Total Facturación'].sum()/1000
-            st.metric("1. Facturación Total (M€)", f"{total_fact:,.1f}M€")
+            st.metric("1. Facturación Total VITHAS", f"€{total_vithas/1000:,.1f}K", 
+                     help="Suma de CCEE + Quirúrgico + Urgencias VITHAS")
         with col2:
-            avg_fact = df['Total Facturación'].mean()/1000
-            st.metric("2. Facturación Mensual Promedio", f"{avg_fact:,.1f}K€")
+            st.metric("2. Facturación Total OSA", f"€{total_osa/1000:,.1f}K", 
+                     help="Suma de CCEE (80%) + Quirúrgico (90%) + Urgencias (50%) OSA")
         with col3:
-            total_pacientes = df['No. De Pacientes CCEE'].sum()
-            st.metric("3. Total Pacientes CCEE", f"{total_pacientes:,}")
-        with col4:
-            total_cirugias = df['No. De Intervenciones Quirúrgicas'].sum()
-            st.metric("4. Total Intervenciones Quirúrgicas", f"{total_cirugias:,}")
+            st.metric("3. Diferencia Total", f"€{diferencia_total/1000:,.1f}K", 
+                     delta=f"{proporcion-1:.1%}" if proporcion != 0 else None,
+                     delta_color="inverse" if diferencia_total < 0 else "normal")
         
-        # Fila 2 de KPIs
-        col5, col6, col7, col8 = st.columns(4)
+        # Fila 2 - Por categoría
+        col4, col5, col6 = st.columns(3)
+        with col4:
+            ccee_vithas = df['Facturación CCEE VITHAS'].sum()
+            ccee_osa = df['Facturación CCEE OSA (80%)'].sum()
+            st.metric("4. Consultas Externas", 
+                     f"VITHAS: €{ccee_vithas/1000:,.1f}K | OSA: €{ccee_osa/1000:,.1f}K",
+                     delta=f"{(ccee_vithas/ccee_osa-1):.1%}" if ccee_osa != 0 else None)
         with col5:
-            total_urgencias = df['No. Urgencias Mes'].sum()
-            st.metric("5. Total Urgencias", f"{total_urgencias:,}")
+            quir_vithas = df['Facturación Quirúrgico VITHAS'].sum()
+            quir_osa = df['Facturación Quirúrgico OSA (90%)'].sum()
+            st.metric("5. Quirúrgico", 
+                     f"VITHAS: €{quir_vithas/1000:,.1f}K | OSA: €{quir_osa/1000:,.1f}K",
+                     delta=f"{(quir_vithas/quir_osa-1):.1%}" if quir_osa != 0 else None)
         with col6:
-            modulos_dia = df['Módulos Totales x día'].mean()
-            st.metric("6. Módulos Diarios Promedio", f"{modulos_dia:.1f}")
-        with col7:
-            precio_medio_consulta = df['Precio Medio Consultas CCEE'].mean()
-            st.metric("7. Precio Medio Consulta (€)", f"{precio_medio_consulta:.2f}€")
-        with col8:
-            precio_medio_cirugia = df['Precio Medio HHMM Quirúrgicas'].mean()
-            st.metric("8. Precio Medio Cirugía (€)", f"{precio_medio_cirugia:,.0f}€")
+            urg_vithas = df['Facturación Urgencias VITHAS'].sum()
+            urg_osa = df['Facturación Urgencias OSA (50%)'].sum()
+            st.metric("6. Urgencias", 
+                     f"VITHAS: €{urg_vithas/1000:,.1f}K | OSA: €{urg_osa/1000:,.1f}K",
+                     delta=f"{(urg_vithas/urg_osa-1):.1%}" if urg_osa != 0 else None)
         
         # ==============================================
-        # SECCIÓN DE GRÁFICOS (8 visualizaciones)
+        # SECCIÓN DE GRÁFICOS COMPARATIVOS
         # ==============================================
         st.markdown("---")
-        st.header("📊 Visualizaciones")
+        st.header("📈 Análisis Visual Comparativo")
         
-        # Gráfico 1: Evolución mensual de facturación
-        fig1 = px.line(df, x='Fecha', y=['Total Facturación', 'Facturación CCEE VITHAS', 
-                                       'Facturación Quirúrgico VITHAS', 'Facturación Urgencias VITHAS'],
-                     title="1. Evolución Mensual de Facturación (€)",
-                     labels={'value': 'Facturación (€)', 'variable': 'Tipo'},
-                     height=500)
+        # Gráfico 1: Comparación mensual total
+        fig1 = go.Figure()
+        fig1.add_trace(go.Bar(x=df['Fecha'], y=df['Total VITHAS'], name='VITHAS'))
+        fig1.add_trace(go.Bar(x=df['Fecha'], y=df['Total OSA'], name='OSA'))
+        fig1.add_trace(go.Scatter(x=df['Fecha'], y=df['Diferencia'], name='Diferencia', 
+                                mode='lines+markers', line=dict(color='red')))
+        fig1.update_layout(barmode='group', title='1. Comparación Mensual VITHAS vs OSA',
+                         yaxis_title='Facturación (€)')
         st.plotly_chart(fig1, use_container_width=True)
         
-        # Gráfico 2: Comparación VITHAS vs OSA
-        fig2 = go.Figure()
-        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación CCEE VITHAS'], name='CCEE VITHAS'))
-        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación CCEE OSA (80%)'], name='CCEE OSA (80%)'))
-        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación Quirúrgico VITHAS'], name='Quirúrgico VITHAS'))
-        fig2.add_trace(go.Bar(x=df['Fecha'], y=df['Facturación Quirúrgico OSA (90%)'], name='Quirúrgico OSA (90%)'))
-        fig2.update_layout(barmode='group', title='2. Comparación Facturación VITHAS vs OSA',
-                          yaxis_title='Facturación (€)')
+        # Gráfico 2: Composición por entidad
+        fig2 = px.sunburst(
+            pd.DataFrame({
+                'Entidad': ['VITHAS', 'VITHAS', 'VITHAS', 'OSA', 'OSA', 'OSA'],
+                'Categoría': ['Consultas', 'Quirúrgico', 'Urgencias']*2,
+                'Valor': [ccee_vithas, quir_vithas, urg_vithas, ccee_osa, quir_osa, urg_osa]
+            }),
+            path=['Entidad', 'Categoría'],
+            values='Valor',
+            title='2. Composición de Facturación por Entidad'
+        )
         st.plotly_chart(fig2, use_container_width=True)
         
-        # Gráfico 3: Pacientes vs Módulos
-        fig3 = px.scatter(df, x='No. De Pacientes CCEE', y='Módulos Totales x día',
-                         size='Pacientes x Módulo (Cada 15 min)', color='Módulos Totales x día',
-                         title="3. Relación Pacientes vs Módulos Diarios",
-                         labels={'No. De Pacientes CCEE': 'N° Pacientes', 'Módulos Totales x día': 'Módulos/Día'})
+        # Gráfico 3: Evolución de la diferencia
+        fig3 = px.area(df, x='Fecha', y='Diferencia',
+                      title="3. Evolución de la Diferencia (VITHAS - OSA)",
+                      labels={'Diferencia': 'Diferencia (€)'})
+        fig3.add_hline(y=0, line_dash="dash", line_color="red")
         st.plotly_chart(fig3, use_container_width=True)
         
-        # Gráfico 4: Distribución de urgencias
-        fig4 = px.bar(df, x='Fecha', y=['Urgencias días Trauma (15%)', 'Urgencias días totales Vitha'],
-                     title="4. Distribución de Urgencias por Tipo",
-                     labels={'value': 'N° Urgencias', 'variable': 'Tipo'})
+        # Gráfico 4: Porcentaje por categoría
+        fig4 = go.Figure()
+        fig4.add_trace(go.Bar(
+            x=['Consultas', 'Quirúrgico', 'Urgencias'],
+            y=[ccee_vithas/ccee_osa*100 if ccee_osa !=0 else 0, 
+               quir_vithas/quir_osa*100 if quir_osa !=0 else 0, 
+               urg_vithas/urg_osa*100 if urg_osa !=0 else 0],
+            name='VITHAS como % de OSA'
+        ))
+        fig4.update_layout(
+            title='4. VITHAS como Porcentaje de OSA por Categoría',
+            yaxis_title='Porcentaje (%)',
+            annotations=[
+                dict(x=xi, y=yi+5, text=f"{yi:.1f}%", showarrow=False)
+                for xi, yi in zip(['Consultas', 'Quirúrgico', 'Urgencias'],
+                                [ccee_vithas/ccee_osa*100 if ccee_osa !=0 else 0, 
+                                 quir_vithas/quir_osa*100 if quir_osa !=0 else 0, 
+                                 urg_vithas/urg_osa*100 if urg_osa !=0 else 0])
+            ]
+        )
         st.plotly_chart(fig4, use_container_width=True)
         
-        # Gráfico 5: Composición de facturación
-        fact_composicion = df[['Facturación CCEE VITHAS', 'Facturación Quirúrgico VITHAS', 
-                             'Facturación Urgencias VITHAS']].sum()
-        fig5 = px.pie(values=fact_composicion, names=fact_composicion.index,
-                     title="5. Composición de Facturación VITHAS",
-                     hole=0.4)
-        st.plotly_chart(fig5, use_container_width=True)
-        
-        # Gráfico 6: Correlaciones entre variables
-        numeric_df = df.select_dtypes(include=['number'])
-        corr = numeric_df.corr()
-        fig6 = go.Figure(data=go.Heatmap(
-            z=corr.values,
-            x=corr.columns,
-            y=corr.columns,
-            colorscale='Blues',
-            zmin=-1,
-            zmax=1
-        ))
-        fig6.update_layout(title="6. Correlación entre Variables Numéricas",
-                          height=600)
-        st.plotly_chart(fig6, use_container_width=True)
-        
-        # Gráfico 7: Precios medios comparativos
-        fig7 = go.Figure()
-        fig7.add_trace(go.Scatter(x=df['Fecha'], y=df['Precio Medio Consultas CCEE'], 
-                                name='Consulta', line=dict(color='green')))
-        fig7.add_trace(go.Scatter(x=df['Fecha'], y=df['Precio Medio HHMM Quirúrgicas'], 
-                                name='Cirugía', line=dict(color='blue')))
-        fig7.add_trace(go.Scatter(x=df['Fecha'], y=df['Precio Medio Urgencias'], 
-                                name='Urgencia', line=dict(color='red')))
-        fig7.update_layout(title="7. Evolución de Precios Medios (€)",
-                         yaxis_title="Precio (€)")
-        st.plotly_chart(fig7, use_container_width=True)
-        
-        # Gráfico 8: Módulos por turno
-        fig8 = px.area(df, x='Fecha', y=['Módulos Mañana', 'Módulos Tarde'],
-                      title="8. Distribución de Módulos por Turno",
-                      labels={'value': 'N° Módulos', 'variable': 'Turno'})
-        st.plotly_chart(fig8, use_container_width=True)
-        
         # ==============================================
-        # SECCIÓN DE ANÁLISIS ADICIONAL
+        # TABLA RESUMEN COMPARATIVO
         # ==============================================
         st.markdown("---")
-        st.header("📌 Resumen Ejecutivo")
+        st.header("📋 Resumen Comparativo Anual")
         
-        with st.expander("🔎 Conclusiones Clave"):
+        summary_df = pd.DataFrame({
+            'Categoría': ['Consultas Externas', 'Quirúrgico', 'Urgencias', 'TOTAL'],
+            'VITHAS (€)': [ccee_vithas, quir_vithas, urg_vithas, total_vithas],
+            'OSA (€)': [ccee_osa, quir_osa, urg_osa, total_osa],
+            'Diferencia (€)': [ccee_vithas-ccee_osa, quir_vithas-quir_osa, urg_vithas-urg_osa, diferencia_total],
+            'VITHAS/OSA': [f"{ccee_vithas/ccee_osa:.1%}" if ccee_osa !=0 else 'N/A',
+                          f"{quir_vithas/quir_osa:.1%}" if quir_osa !=0 else 'N/A',
+                          f"{urg_vithas/urg_osa:.1%}" if urg_osa !=0 else 'N/A',
+                          f"{proporcion:.1%}" if proporcion !=0 else 'N/A']
+        })
+        
+        # Formatear números
+        for col in ['VITHAS (€)', 'OSA (€)', 'Diferencia (€)']:
+            summary_df[col] = summary_df[col].apply(lambda x: f"€{x:,.0f}")
+        
+        st.dataframe(summary_df, hide_index=True, use_container_width=True)
+        
+        # ==============================================
+        # ANÁLISIS COMPARATIVO
+        # ==============================================
+        st.markdown("---")
+        st.header("📌 Conclusiones Clave")
+        
+        with st.expander("🔎 Ver análisis detallado", expanded=True):
             st.write(f"""
-            - **Facturación Total Proyectada**: {total_fact:,.1f} millones de euros
-            - **Promedio Mensual**: {avg_fact:,.1f} mil euros
-            - **Capacidad de Atención**: 
-                - {total_pacientes:,} pacientes en consultas externas
-                - {total_cirugias:,} intervenciones quirúrgicas
-                - {total_urgencias:,} atenciones de urgencia
-            - **Distribución Facturación**:
-                - Consultas: {(fact_composicion[0]/total_fact/1000)*100:.1f}%
-                - Quirúrgico: {(fact_composicion[1]/total_fact/1000)*100:.1f}%
-                - Urgencias: {(fact_composicion[2]/total_fact/1000)*100:.1f}%
+            **1. Balance Total:**
+            - VITHAS factura €{total_vithas/1000:,.1f}K vs €{total_osa/1000:,.1f}K de OSA
+            - Diferencia a favor de VITHAS: €{diferencia_total/1000:,.1f}K ({proporcion:.1%} del total OSA)
+            
+            **2. Por Categoría:**
+            - **Consultas:** VITHAS ({ccee_vithas/1000:,.1f}K) vs OSA ({ccee_osa/1000:,.1f}K) | Relación 80% esperada
+            - **Quirúrgico:** VITHAS ({quir_vithas/1000:,.1f}K) vs OSA ({quir_osa/1000:,.1f}K) | Relación 90% esperada
+            - **Urgencias:** VITHAS ({urg_vithas/1000:,.1f}K) vs OSA ({urg_osa/1000:,.1f}K) | Relación 50% esperada
+            
+            **3. Tendencia Mensual:**
+            - La diferencia es más pronunciada en {df.loc[df['Diferencia'].idxmax(), 'Fecha'].strftime('%B')} (€{df['Diferencia'].max()/1000:,.1f}K)
+            - Menor diferencia en {df.loc[df['Diferencia'].idxmin(), 'Fecha'].strftime('%B')} (€{df['Diferencia'].min()/1000:,.1f}K)
             """)
     
     except Exception as e:
