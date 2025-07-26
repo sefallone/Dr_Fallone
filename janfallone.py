@@ -40,13 +40,31 @@ total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urge
 osa_total = total_facturacion - vithas_total
 
 # --- CONTROL SOBRE PORCENTAJE PERSONAL EN OSA ---
+# --- CONTROL SOBRE PORCENTAJE PERSONAL EN OSA ---
 st.subheader("⚙️ Reparto Interno en OSA")
 mi_porcentaje = st.slider("¿Qué porcentaje de OSA te quieres quedar tú?", min_value=0, max_value=100, value=50, step=1)
+mi_ratio = mi_porcentaje / 100
 
-# Cálculo de reparto
-mi_parte_osa = osa_total * (mi_porcentaje / 100)
-resto_osa = osa_total - mi_parte_osa
-osb = smob = jpp = resto_osa / 3
+# --- CÁLCULOS DE OSA POR ESPECIALIDAD ---
+osa_total = facturacion_ccee * 0.80 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50
+
+# Especialidad dentro de OSA
+osa_hombro = (ccee_hombro * 0.80) + (q_hombro * 0.90) + (u_hombro * 0.50)
+osa_rodilla = (ccee_rodilla * 0.80) + (q_rodilla * 0.90) + (u_rodilla * 0.50)
+osa_pie = (ccee_pie * 0.80) + (q_pie * 0.90) + (u_pie * 0.50)
+
+# Tu parte
+yo_hombro = osa_hombro * mi_ratio
+yo_rodilla = osa_rodilla * mi_ratio
+yo_pie = osa_pie * mi_ratio
+
+yo_total = yo_hombro + yo_rodilla + yo_pie
+
+# Reparto restante
+osb = osa_hombro - yo_hombro
+smob = osa_rodilla - yo_rodilla
+jpp = osa_pie - yo_pie
+
 
 # --- RESULTADOS ---
 st.subheader("📊 Resultados de Distribución")
