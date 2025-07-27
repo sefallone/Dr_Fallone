@@ -10,7 +10,7 @@ st.markdown("""
         padding-top: 2rem;
     }
     .metric-container {
-        background-color: #F0F2F6;
+        background-color: #325EB8;
         padding: 1rem;
         border-radius: 0.5rem;
         margin-bottom: 1rem;
@@ -21,7 +21,7 @@ st.markdown("""
         color: #2E4053;
     }
     .stExpander {
-        background-color: #FAFAFA;
+        background-color: #325EB8;
         border: 1px solid #E0E0E0;
         border-radius: 0.5rem;
     }
