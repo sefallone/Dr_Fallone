@@ -110,7 +110,7 @@ with st.container():
     with z1:
         st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
     with z2:
-        st.metric("🔺 Giancarlo Fallone", f"{gp:,.2f} €")
+        st.metric("🔺 Giancarlo Fallone", f"{gf:,.2f} €")
     with z3:
         st.metric("🔺 Jordi Puigdellívol", f"{jp:,.2f} €")
     with z4:
