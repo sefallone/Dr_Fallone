@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+from io import BytesIO
 
 st.set_page_config(page_title="Distribución de Facturación", layout="wide")
 
