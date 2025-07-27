@@ -162,7 +162,9 @@ elif menu == "Proyección 2026-2032":
     st.header("📈 Proyección de Facturación (2026-2032)")
     base = st.number_input("💼 Ingresa la facturación base (año 2026)", min_value=0.0, step=100.0, value=100000.0)
 
-    crecimiento = 0.30
+    crecimiento_pct = st.slider("📈 Porcentaje de crecimiento anual (%)", min_value=0, max_value=100, value=30)
+    crecimiento = crecimiento_pct / 100
+
     años = list(range(2026, 2033))
     proyecciones = [base * ((1 + crecimiento) ** (i - 2026)) for i in años]
 
@@ -192,5 +194,3 @@ elif menu == "Proyección 2026-2032":
     )
     st.plotly_chart(fig_tipo, use_container_width=True)
     st.dataframe(df_proj.style.format("{:.2f}"))
-
-    
