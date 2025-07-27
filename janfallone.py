@@ -156,7 +156,39 @@ if menu == "Dashboard Actual":
     fig.update_traces(textposition="inside", textinfo="percent+label")
     st.plotly_chart(fig, use_container_width=True)
 
+    st.markdown("---")
+    st.subheader("⬇️ Descargar Datos del Dashboard en Excel")
+
+    # Ejemplo de DataFrame con KPIs
+    dashboard_data = {
+        "Concepto": [
+            "Total Facturación", "Facturación CCEE", "Facturación Quirúrgico", "Facturación Urgencias",
+            "Total VITHAS", "Total OSA"
+        ],
+        "Valor (€)": [
+            total_facturacion, facturacion_ccee, facturacion_quirurgico, facturacion_urgencias,
+            vithas_total, osa_total
+        ]
+    }
+    df_dashboard = pd.DataFrame(dashboard_data)
+
+    def to_excel_dashboard(df):
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Dashboard')
+        processed_data = output.getvalue()
+        return processed_data
+
+    excel_dashboard = to_excel_dashboard(df_dashboard)
+    st.download_button(
+        label="📅 Descargar Excel del Dashboard",
+        data=excel_dashboard,
+        file_name="dashboard_facturacion_actual.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
     pass
+
 
 elif menu == "Proyección 2026-2032":
     st.header("📈 Proyección de Facturación (2026-2032)")
@@ -201,3 +233,20 @@ elif menu == "Proyección 2026-2032":
     )
     st.plotly_chart(fig_tipo, use_container_width=True)
     st.dataframe(df_proj.style.format("{:.2f}"))
+
+    st.markdown("---")
+    st.subheader("⬇️ Descargar Datos en Excel")
+    def to_excel(df):
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Proyeccion')
+        processed_data = output.getvalue()
+        return processed_data
+
+    excel_data = to_excel(df_proj)
+    st.download_button(
+        label="📅 Descargar Excel Proyección",
+        data=excel_data,
+        file_name="proyeccion_facturacion_2026_2032.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
