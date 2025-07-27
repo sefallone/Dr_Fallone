@@ -162,11 +162,18 @@ elif menu == "Proyección 2026-2032":
     st.header("📈 Proyección de Facturación (2026-2032)")
     base = st.number_input("💼 Ingresa la facturación base (año 2026)", min_value=0.0, step=100.0, value=100000.0)
 
-    crecimiento_pct = st.slider("📈 Porcentaje de crecimiento anual (%)", min_value=0, max_value=100, value=30)
-    crecimiento = crecimiento_pct / 100
-
+    st.subheader("🔄 Porcentaje de crecimiento por año")
+    crecimiento_por_año = {}
     años = list(range(2026, 2033))
-    proyecciones = [base * ((1 + crecimiento) ** (i - 2026)) for i in años]
+    for anio in años:
+        crecimiento_por_año[anio] = st.slider(f"Crecimiento {anio} (%)", 0, 100, 30)
+
+    proyecciones = []
+    valor_actual = base
+    for anio in años:
+        crecimiento = crecimiento_por_año[anio] / 100
+        valor_actual *= (1 + crecimiento)
+        proyecciones.append(valor_actual)
 
     df_proj = pd.DataFrame({"Año": años, "Proyección Total (€)": proyecciones})
 
