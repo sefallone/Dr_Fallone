@@ -83,7 +83,7 @@ total_distribuciones = {
 }
 
 st.markdown("---")
-st.header("📊 Totales de Distribución")
+st.header("📊 Totales de Facturación")
 
 with st.container():
     k0, k1, k2, k3, = st.columns(4)
@@ -95,6 +95,9 @@ with st.container():
         st.metric("Quirúrgico", f"{facturacion_quirurgico:,.2f} €")
     with k3:
         st.metric("Urgencias", f"{facturacion_urgencias:,.2f} €")
+
+st.markdown("---")
+st.header("📊 Totales Hospital / Servicio de Traumatología")
          
 
 with st.container():
@@ -103,6 +106,9 @@ with st.container():
         st.metric("💙 Total VITHAS", f"{vithas_total:,.2f} €")
     with m2:
         st.metric("🟩 Total OSA", f"{osa_total:,.2f} €")
+
+st.markdown("---")
+st.header("📊 OSA Beneficios ")
     
 
 with st.container():
@@ -117,6 +123,9 @@ with st.container():
         st.metric("🔺 Juan Pablo Ortega", f"{jpp_p:,.2f} €")
     with z5:
         st.metric("🔺 Total OSA DISTRIBUIR", f"{osa_restante:,.2f} €")
+
+st.markdown("---")
+st.header("📊 OSA Distribución ")
         
 with st.container():
     d1, d2, d3 = st.columns(3)
@@ -132,7 +141,7 @@ with st.container():
 
 # --- GRÁFICO ---
 st.markdown("---")
-st.subheader("📈 Distribución Global")
+st.subheader("📈 Distribución OSA")
 fig = px.pie(
     names=list(total_distribuciones.keys()),
     values=list(total_distribuciones.values()),
