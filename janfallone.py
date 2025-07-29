@@ -244,68 +244,67 @@ if menu == "Dashboard Actual":
     st.markdown("---")
     st.header("📊 OSA Distribución por Médico")
 
-            # --- DISTRIBUCIÓN PORCENTUAL POR MÉDICO EN CADA ESPECIALIDAD ---
-            # OSB
-            total_OSB_input = (
-                ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3 +
-                q_OSB_1 + q_OSB_2 + q_OSB_3 +
-                u_OSB_1 + u_OSB_2 + u_OSB_3
-            )
-            if total_OSB_input > 0:
-                dist_OSB = {
-                    "Médico 1": ((ccee_OSB_1 + q_OSB_1 + u_OSB_1) / total_OSB_input) * osa_OSB,
-                    "Médico 2": ((ccee_OSB_2 + q_OSB_2 + u_OSB_2) / total_OSB_input) * osa_OSB,
-                    "Médico 3": ((ccee_OSB_3 + q_OSB_3 + u_OSB_3) / total_OSB_input) * osa_OSB,
-                }
-            else:
-                dist_OSB = {"Médico 1": 0, "Médico 2": 0, "Médico 3": 0}
-            
-            # SMOB
-            total_SMOB_input = (
-                ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4 +
-                q_SMOB_1 + q_SMOB_2 + q_SMOB_3 + q_SMOB_4 +
-                u_SMOB_1 + u_SMOB_2 + u_SMOB_3 + u_SMOB_4
-            )
-            if total_SMOB_input > 0:
-                dist_SMOB = {
-                    "Médico 1": ((ccee_SMOB_1 + q_SMOB_1 + u_SMOB_1) / total_SMOB_input) * osa_SMOB,
-                    "Médico 2": ((ccee_SMOB_2 + q_SMOB_2 + u_SMOB_2) / total_SMOB_input) * osa_SMOB,
-                    "Médico 3": ((ccee_SMOB_3 + q_SMOB_3 + u_SMOB_3) / total_SMOB_input) * osa_SMOB,
-                    "Médico 4": ((ccee_SMOB_4 + q_SMOB_4 + u_SMOB_4) / total_SMOB_input) * osa_SMOB,
-                }
-            else:
-                dist_SMOB = {f"Médico {i}": 0 for i in range(1, 5)}
-            
-            # JPP
-            total_JPP_input = (
-                ccee_JPP_1 + ccee_JPP_2 +
-                q_JPP_1 + q_JPP_2 +
-                u_JPP_1 + u_JPP_2
-            )
-            if total_JPP_input > 0:
-                dist_JPP = {
-                    "Médico 1": ((ccee_JPP_1 + q_JPP_1 + u_JPP_1) / total_JPP_input) * osa_JPP,
-                    "Médico 2": ((ccee_JPP_2 + q_JPP_2 + u_JPP_2) / total_JPP_input) * osa_JPP,
-                }
-            else:
-                dist_JPP = {"Médico 1": 0, "Médico 2": 0}
-            
-            # --- VISUALIZACIÓN ---
-            st.subheader("🔹 OSB (Hombro y Codo)")
-            for nombre, valor in dist_OSB.items():
-                st.write(f"{nombre}: {valor:,.2f} €")
-            
-            st.subheader("🔹 SMOB (Rodilla)")
-            for nombre, valor in dist_SMOB.items():
-                st.write(f"{nombre}: {valor:,.2f} €")
-            
-            st.subheader("🔹 JPP (Pie y Tobillo)")
-            for nombre, valor in dist_JPP.items():
-                st.write(f"{nombre}: {valor:,.2f} €")
-
+        # --- DISTRIBUCIÓN PORCENTUAL POR MÉDICO EN CADA ESPECIALIDAD ---
+    # OSB
+    total_OSB_input = (
+        ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3 +
+        q_OSB_1 + q_OSB_2 + q_OSB_3 +
+        u_OSB_1 + u_OSB_2 + u_OSB_3
+    )
+    if total_OSB_input > 0:
+        dist_OSB = {
+            "Médico 1": ((ccee_OSB_1 + q_OSB_1 + u_OSB_1) / total_OSB_input) * osa_OSB,
+            "Médico 2": ((ccee_OSB_2 + q_OSB_2 + u_OSB_2) / total_OSB_input) * osa_OSB,
+            "Médico 3": ((ccee_OSB_3 + q_OSB_3 + u_OSB_3) / total_OSB_input) * osa_OSB,
+        }
+    else:
+        dist_OSB = {"Médico 1": 0, "Médico 2": 0, "Médico 3": 0}
     
-    #for k, v in total_distribuciones.items():
-    #    st.write(f"{k}: {v:,.2f} €")
+    # SMOB
+    total_SMOB_input = (
+        ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4 +
+        q_SMOB_1 + q_SMOB_2 + q_SMOB_3 + q_SMOB_4 +
+        u_SMOB_1 + u_SMOB_2 + u_SMOB_3 + u_SMOB_4
+    )
+    if total_SMOB_input > 0:
+        dist_SMOB = {
+            "Médico 1": ((ccee_SMOB_1 + q_SMOB_1 + u_SMOB_1) / total_SMOB_input) * osa_SMOB,
+            "Médico 2": ((ccee_SMOB_2 + q_SMOB_2 + u_SMOB_2) / total_SMOB_input) * osa_SMOB,
+            "Médico 3": ((ccee_SMOB_3 + q_SMOB_3 + u_SMOB_3) / total_SMOB_input) * osa_SMOB,
+            "Médico 4": ((ccee_SMOB_4 + q_SMOB_4 + u_SMOB_4) / total_SMOB_input) * osa_SMOB,
+        }
+    else:
+        dist_SMOB = {f"Médico {i}": 0 for i in range(1, 5)}
+    
+    # JPP
+    total_JPP_input = (
+        ccee_JPP_1 + ccee_JPP_2 +
+        q_JPP_1 + q_JPP_2 +
+        u_JPP_1 + u_JPP_2
+    )
+    if total_JPP_input > 0:
+        dist_JPP = {
+            "Médico 1": ((ccee_JPP_1 + q_JPP_1 + u_JPP_1) / total_JPP_input) * osa_JPP,
+            "Médico 2": ((ccee_JPP_2 + q_JPP_2 + u_JPP_2) / total_JPP_input) * osa_JPP,
+        }
+    else:
+        dist_JPP = {"Médico 1": 0, "Médico 2": 0}
+    
+    # --- VISUALIZACIÓN ---
+    st.subheader("🔹 OSB (Hombro y Codo)")
+    for nombre, valor in dist_OSB.items():
+        st.write(f"{nombre}: {valor:,.2f} €")
+    
+    st.subheader("🔹 SMOB (Rodilla)")
+    for nombre, valor in dist_SMOB.items():
+        st.write(f"{nombre}: {valor:,.2f} €")
+    
+    st.subheader("🔹 JPP (Pie y Tobillo)")
+    for nombre, valor in dist_JPP.items():
+        st.write(f"{nombre}: {valor:,.2f} €")
+        
+        #for k, v in total_distribuciones.items():
+        #    st.write(f"{k}: {v:,.2f} €")
     
     # --- GRÁFICO ---
     st.markdown("---")
