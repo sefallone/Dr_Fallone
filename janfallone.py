@@ -36,73 +36,135 @@ menu = st.sidebar.radio("Selecciona una sección", ["Dashboard Actual", "Proyecc
 if menu == "Dashboard Actual":
 
     # --- INPUT DE FACTURACIÓN ---
-    # --- INPUT DE FACTURACIÓN ---
-    with st.expander("📋 Ingresar Facturación por Especialidad"):
-        st.subheader("💳 Facturación CCEE")
-    
-        # OSB - 3 médicos
-        ccee_OSB_1 = st.number_input("OSB - Médico 1 (CCEE)", min_value=0.0, step=100.0)
-        ccee_OSB_2 = st.number_input("OSB - Médico 2 (CCEE)", min_value=0.0, step=100.0)
-        ccee_OSB_3 = st.number_input("OSB - Médico 3 (CCEE)", min_value=0.0, step=100.0)
-        ccee_OSB = ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3
-    
-        # SMOB - 4 médicos
-        ccee_SMOB_1 = st.number_input("SMOB - Médico 1 (CCEE)", min_value=0.0, step=100.0)
-        ccee_SMOB_2 = st.number_input("SMOB - Médico 2 (CCEE)", min_value=0.0, step=100.0)
-        ccee_SMOB_3 = st.number_input("SMOB - Médico 3 (CCEE)", min_value=0.0, step=100.0)
-        ccee_SMOB_4 = st.number_input("SMOB - Médico 4 (CCEE)", min_value=0.0, step=100.0)
-        ccee_SMOB = ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4
-    
-        # JPP - 2 médicos
-        ccee_JPP_1 = st.number_input("JPP - Médico 1 (CCEE)", min_value=0.0, step=100.0)
-        ccee_JPP_2 = st.number_input("JPP - Médico 2 (CCEE)", min_value=0.0, step=100.0)
-        ccee_JPP = ccee_JPP_1 + ccee_JPP_2
-    
-        facturacion_ccee = ccee_OSB + ccee_SMOB + ccee_JPP
-    
-        st.subheader("🔪 Facturación Quirúrgica")
-    
-        # OSB - 3 médicos
-        q_OSB_1 = st.number_input("OSB - Médico 1 (Q)", min_value=0.0, step=100.0)
-        q_OSB_2 = st.number_input("OSB - Médico 2 (Q)", min_value=0.0, step=100.0)
-        q_OSB_3 = st.number_input("OSB - Médico 3 (Q)", min_value=0.0, step=100.0)
-        q_OSB = q_OSB_1 + q_OSB_2 + q_OSB_3
-    
-        # SMOB - 4 médicos
-        q_SMOB_1 = st.number_input("SMOB - Médico 1 (Q)", min_value=0.0, step=100.0)
-        q_SMOB_2 = st.number_input("SMOB - Médico 2 (Q)", min_value=0.0, step=100.0)
-        q_SMOB_3 = st.number_input("SMOB - Médico 3 (Q)", min_value=0.0, step=100.0)
-        q_SMOB_4 = st.number_input("SMOB - Médico 4 (Q)", min_value=0.0, step=100.0)
-        q_SMOB = q_SMOB_1 + q_SMOB_2 + q_SMOB_3 + q_SMOB_4
-    
-        # JPP - 2 médicos
-        q_JPP_1 = st.number_input("JPP - Médico 1 (Q)", min_value=0.0, step=100.0)
-        q_JPP_2 = st.number_input("JPP - Médico 2 (Q)", min_value=0.0, step=100.0)
-        q_JPP = q_JPP_1 + q_JPP_2
-    
-        facturacion_quirurgico = q_OSB + q_SMOB + q_JPP
+with st.expander("📋 Ingresar Facturación por Especialidad"):
+    st.subheader("💳 Facturación CCEE")
 
-        st.subheader("🚨 Facturación Urgencias")
-    
-        # OSB - 3 médicos
-        u_OSB_1 = st.number_input("OSB - Médico 1 (U)", min_value=0.0, step=100.0)
-        u_OSB_2 = st.number_input("OSB - Médico 2 (U)", min_value=0.0, step=100.0)
-        u_OSB_3 = st.number_input("OSB - Médico 3 (U)", min_value=0.0, step=100.0)
+    # OSB - 3 médicos
+    st.markdown("**💼 OSB (Hombro y Codo)**")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        ccee_OSB_1 = st.number_input("Médico 1 (CCEE)", key="ccee_osb_1", min_value=0.0, step=100.0)
+    with c2:
+        ccee_OSB_2 = st.number_input("Médico 2 (CCEE)", key="ccee_osb_2", min_value=0.0, step=100.0)
+    with c3:
+        ccee_OSB_3 = st.number_input("Médico 3 (CCEE)", key="ccee_osb_3", min_value=0.0, step=100.0)
+    with c4:
+        ccee_OSB = ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3
+        st.metric("Total OSB", f"{ccee_OSB:,.2f} €")
+
+    # SMOB - 4 médicos
+    st.markdown("**💼 SMOB (Rodilla)**")
+    s1, s2, s3, s4, s5 = st.columns(5)
+    with s1:
+        ccee_SMOB_1 = st.number_input("Médico 1 (CCEE)", key="ccee_smob_1", min_value=0.0, step=100.0)
+    with s2:
+        ccee_SMOB_2 = st.number_input("Médico 2 (CCEE)", key="ccee_smob_2", min_value=0.0, step=100.0)
+    with s3:
+        ccee_SMOB_3 = st.number_input("Médico 3 (CCEE)", key="ccee_smob_3", min_value=0.0, step=100.0)
+    with s4:
+        ccee_SMOB_4 = st.number_input("Médico 4 (CCEE)", key="ccee_smob_4", min_value=0.0, step=100.0)
+    with s5:
+        ccee_SMOB = ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4
+        st.metric("Total SMOB", f"{ccee_SMOB:,.2f} €")
+
+    # JPP - 2 médicos
+    st.markdown("**💼 JPP (Pie y Tobillo)**")
+    j1, j2, j3 = st.columns(3)
+    with j1:
+        ccee_JPP_1 = st.number_input("Médico 1 (CCEE)", key="ccee_jpp_1", min_value=0.0, step=100.0)
+    with j2:
+        ccee_JPP_2 = st.number_input("Médico 2 (CCEE)", key="ccee_jpp_2", min_value=0.0, step=100.0)
+    with j3:
+        ccee_JPP = ccee_JPP_1 + ccee_JPP_2
+        st.metric("Total JPP", f"{ccee_JPP:,.2f} €")
+
+    facturacion_ccee = ccee_OSB + ccee_SMOB + ccee_JPP
+
+    st.subheader("🔪 Facturación Quirúrgica")
+
+    # OSB
+    st.markdown("**🔧 OSB (Hombro y Codo)**")
+    q1, q2, q3, q4 = st.columns(4)
+    with q1:
+        q_OSB_1 = st.number_input("Médico 1 (Q)", key="q_osb_1", min_value=0.0, step=100.0)
+    with q2:
+        q_OSB_2 = st.number_input("Médico 2 (Q)", key="q_osb_2", min_value=0.0, step=100.0)
+    with q3:
+        q_OSB_3 = st.number_input("Médico 3 (Q)", key="q_osb_3", min_value=0.0, step=100.0)
+    with q4:
+        q_OSB = q_OSB_1 + q_OSB_2 + q_OSB_3
+        st.metric("Total OSB", f"{q_OSB:,.2f} €")
+
+    # SMOB
+    st.markdown("**🔧 SMOB (Rodilla)**")
+    q5, q6, q7, q8, q9 = st.columns(5)
+    with q5:
+        q_SMOB_1 = st.number_input("Médico 1 (Q)", key="q_smob_1", min_value=0.0, step=100.0)
+    with q6:
+        q_SMOB_2 = st.number_input("Médico 2 (Q)", key="q_smob_2", min_value=0.0, step=100.0)
+    with q7:
+        q_SMOB_3 = st.number_input("Médico 3 (Q)", key="q_smob_3", min_value=0.0, step=100.0)
+    with q8:
+        q_SMOB_4 = st.number_input("Médico 4 (Q)", key="q_smob_4", min_value=0.0, step=100.0)
+    with q9:
+        q_SMOB = q_SMOB_1 + q_SMOB_2 + q_SMOB_3 + q_SMOB_4
+        st.metric("Total SMOB", f"{q_SMOB:,.2f} €")
+
+    # JPP
+    st.markdown("**🔧 JPP (Pie y Tobillo)**")
+    q10, q11, q12 = st.columns(3)
+    with q10:
+        q_JPP_1 = st.number_input("Médico 1 (Q)", key="q_jpp_1", min_value=0.0, step=100.0)
+    with q11:
+        q_JPP_2 = st.number_input("Médico 2 (Q)", key="q_jpp_2", min_value=0.0, step=100.0)
+    with q12:
+        q_JPP = q_JPP_1 + q_JPP_2
+        st.metric("Total JPP", f"{q_JPP:,.2f} €")
+
+    facturacion_quirurgico = q_OSB + q_SMOB + q_JPP
+
+    st.subheader("🚨 Facturación Urgencias")
+
+    # OSB
+    st.markdown("**🚑 OSB (Hombro y Codo)**")
+    u1, u2, u3, u4 = st.columns(4)
+    with u1:
+        u_OSB_1 = st.number_input("Médico 1 (U)", key="u_osb_1", min_value=0.0, step=100.0)
+    with u2:
+        u_OSB_2 = st.number_input("Médico 2 (U)", key="u_osb_2", min_value=0.0, step=100.0)
+    with u3:
+        u_OSB_3 = st.number_input("Médico 3 (U)", key="u_osb_3", min_value=0.0, step=100.0)
+    with u4:
         u_OSB = u_OSB_1 + u_OSB_2 + u_OSB_3
-    
-        # SMOB - 4 médicos
-        u_SMOB_1 = st.number_input("SMOB - Médico 1 (U)", min_value=0.0, step=100.0)
-        u_SMOB_2 = st.number_input("SMOB - Médico 2 (U)", min_value=0.0, step=100.0)
-        u_SMOB_3 = st.number_input("SMOB - Médico 3 (U)", min_value=0.0, step=100.0)
-        u_SMOB_4 = st.number_input("SMOB - Médico 4 (U)", min_value=0.0, step=100.0)
+        st.metric("Total OSB", f"{u_OSB:,.2f} €")
+
+    # SMOB
+    st.markdown("**🚑 SMOB (Rodilla)**")
+    u5, u6, u7, u8, u9 = st.columns(5)
+    with u5:
+        u_SMOB_1 = st.number_input("Médico 1 (U)", key="u_smob_1", min_value=0.0, step=100.0)
+    with u6:
+        u_SMOB_2 = st.number_input("Médico 2 (U)", key="u_smob_2", min_value=0.0, step=100.0)
+    with u7:
+        u_SMOB_3 = st.number_input("Médico 3 (U)", key="u_smob_3", min_value=0.0, step=100.0)
+    with u8:
+        u_SMOB_4 = st.number_input("Médico 4 (U)", key="u_smob_4", min_value=0.0, step=100.0)
+    with u9:
         u_SMOB = u_SMOB_1 + u_SMOB_2 + u_SMOB_3 + u_SMOB_4
-    
-        # JPP - 2 médicos
-        u_JPP_1 = st.number_input("JPP - Médico 1 (U)", min_value=0.0, step=100.0)
-        u_JPP_2 = st.number_input("JPP - Médico 2 (U)", min_value=0.0, step=100.0)
+        st.metric("Total SMOB", f"{u_SMOB:,.2f} €")
+
+    # JPP
+    st.markdown("**🚑 JPP (Pie y Tobillo)**")
+    u10, u11, u12 = st.columns(3)
+    with u10:
+        u_JPP_1 = st.number_input("Médico 1 (U)", key="u_jpp_1", min_value=0.0, step=100.0)
+    with u11:
+        u_JPP_2 = st.number_input("Médico 2 (U)", key="u_jpp_2", min_value=0.0, step=100.0)
+    with u12:
         u_JPP = u_JPP_1 + u_JPP_2
-    
-        facturacion_urgencias = u_OSB + u_SMOB + u_JPP
+        st.metric("Total JPP", f"{u_JPP:,.2f} €")
+
+    facturacion_urgencias = u_OSB + u_SMOB + u_JPP
 
     # --- DISTRIBUCIONES ---
     vithas_total = facturacion_ccee * 0.20 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50  # Vithas Total
