@@ -37,72 +37,72 @@ if menu == "Dashboard Actual":
 
     # --- INPUT DE FACTURACIÓN ---
     # --- INPUT DE FACTURACIÓN ---
-with st.expander("📋 Ingresar Facturación por Especialidad"):
-    st.subheader("💳 Facturación CCEE")
+    with st.expander("📋 Ingresar Facturación por Especialidad"):
+        st.subheader("💳 Facturación CCEE")
+    
+        # OSB - 3 médicos
+        ccee_OSB_1 = st.number_input("OSB - Médico 1 (CCEE)", min_value=0.0, step=100.0)
+        ccee_OSB_2 = st.number_input("OSB - Médico 2 (CCEE)", min_value=0.0, step=100.0)
+        ccee_OSB_3 = st.number_input("OSB - Médico 3 (CCEE)", min_value=0.0, step=100.0)
+        ccee_OSB = ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3
+    
+        # SMOB - 4 médicos
+        ccee_SMOB_1 = st.number_input("SMOB - Médico 1 (CCEE)", min_value=0.0, step=100.0)
+        ccee_SMOB_2 = st.number_input("SMOB - Médico 2 (CCEE)", min_value=0.0, step=100.0)
+        ccee_SMOB_3 = st.number_input("SMOB - Médico 3 (CCEE)", min_value=0.0, step=100.0)
+        ccee_SMOB_4 = st.number_input("SMOB - Médico 4 (CCEE)", min_value=0.0, step=100.0)
+        ccee_SMOB = ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4
+    
+        # JPP - 2 médicos
+        ccee_JPP_1 = st.number_input("JPP - Médico 1 (CCEE)", min_value=0.0, step=100.0)
+        ccee_JPP_2 = st.number_input("JPP - Médico 2 (CCEE)", min_value=0.0, step=100.0)
+        ccee_JPP = ccee_JPP_1 + ccee_JPP_2
+    
+        facturacion_ccee = ccee_OSB + ccee_SMOB + ccee_JPP
+    
+        st.subheader("🔪 Facturación Quirúrgica")
+    
+        # OSB - 3 médicos
+        q_OSB_1 = st.number_input("OSB - Médico 1 (Q)", min_value=0.0, step=100.0)
+        q_OSB_2 = st.number_input("OSB - Médico 2 (Q)", min_value=0.0, step=100.0)
+        q_OSB_3 = st.number_input("OSB - Médico 3 (Q)", min_value=0.0, step=100.0)
+        q_OSB = q_OSB_1 + q_OSB_2 + q_OSB_3
+    
+        # SMOB - 4 médicos
+        q_SMOB_1 = st.number_input("SMOB - Médico 1 (Q)", min_value=0.0, step=100.0)
+        q_SMOB_2 = st.number_input("SMOB - Médico 2 (Q)", min_value=0.0, step=100.0)
+        q_SMOB_3 = st.number_input("SMOB - Médico 3 (Q)", min_value=0.0, step=100.0)
+        q_SMOB_4 = st.number_input("SMOB - Médico 4 (Q)", min_value=0.0, step=100.0)
+        q_SMOB = q_SMOB_1 + q_SMOB_2 + q_SMOB_3 + q_SMOB_4
+    
+        # JPP - 2 médicos
+        q_JPP_1 = st.number_input("JPP - Médico 1 (Q)", min_value=0.0, step=100.0)
+        q_JPP_2 = st.number_input("JPP - Médico 2 (Q)", min_value=0.0, step=100.0)
+        q_JPP = q_JPP_1 + q_JPP_2
+    
+        facturacion_quirurgico = q_OSB + q_SMOB + q_JPP
 
-    # OSB - 3 médicos
-    ccee_OSB_1 = st.number_input("OSB - Médico 1 (CCEE)", min_value=0.0, step=100.0)
-    ccee_OSB_2 = st.number_input("OSB - Médico 2 (CCEE)", min_value=0.0, step=100.0)
-    ccee_OSB_3 = st.number_input("OSB - Médico 3 (CCEE)", min_value=0.0, step=100.0)
-    ccee_OSB = ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3
-
-    # SMOB - 4 médicos
-    ccee_SMOB_1 = st.number_input("SMOB - Médico 1 (CCEE)", min_value=0.0, step=100.0)
-    ccee_SMOB_2 = st.number_input("SMOB - Médico 2 (CCEE)", min_value=0.0, step=100.0)
-    ccee_SMOB_3 = st.number_input("SMOB - Médico 3 (CCEE)", min_value=0.0, step=100.0)
-    ccee_SMOB_4 = st.number_input("SMOB - Médico 4 (CCEE)", min_value=0.0, step=100.0)
-    ccee_SMOB = ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4
-
-    # JPP - 2 médicos
-    ccee_JPP_1 = st.number_input("JPP - Médico 1 (CCEE)", min_value=0.0, step=100.0)
-    ccee_JPP_2 = st.number_input("JPP - Médico 2 (CCEE)", min_value=0.0, step=100.0)
-    ccee_JPP = ccee_JPP_1 + ccee_JPP_2
-
-    facturacion_ccee = ccee_OSB + ccee_SMOB + ccee_JPP
-
-    st.subheader("🔪 Facturación Quirúrgica")
-
-    # OSB - 3 médicos
-    q_OSB_1 = st.number_input("OSB - Médico 1 (Q)", min_value=0.0, step=100.0)
-    q_OSB_2 = st.number_input("OSB - Médico 2 (Q)", min_value=0.0, step=100.0)
-    q_OSB_3 = st.number_input("OSB - Médico 3 (Q)", min_value=0.0, step=100.0)
-    q_OSB = q_OSB_1 + q_OSB_2 + q_OSB_3
-
-    # SMOB - 4 médicos
-    q_SMOB_1 = st.number_input("SMOB - Médico 1 (Q)", min_value=0.0, step=100.0)
-    q_SMOB_2 = st.number_input("SMOB - Médico 2 (Q)", min_value=0.0, step=100.0)
-    q_SMOB_3 = st.number_input("SMOB - Médico 3 (Q)", min_value=0.0, step=100.0)
-    q_SMOB_4 = st.number_input("SMOB - Médico 4 (Q)", min_value=0.0, step=100.0)
-    q_SMOB = q_SMOB_1 + q_SMOB_2 + q_SMOB_3 + q_SMOB_4
-
-    # JPP - 2 médicos
-    q_JPP_1 = st.number_input("JPP - Médico 1 (Q)", min_value=0.0, step=100.0)
-    q_JPP_2 = st.number_input("JPP - Médico 2 (Q)", min_value=0.0, step=100.0)
-    q_JPP = q_JPP_1 + q_JPP_2
-
-    facturacion_quirurgico = q_OSB + q_SMOB + q_JPP
-
-    st.subheader("🚨 Facturación Urgencias")
-
-    # OSB - 3 médicos
-    u_OSB_1 = st.number_input("OSB - Médico 1 (U)", min_value=0.0, step=100.0)
-    u_OSB_2 = st.number_input("OSB - Médico 2 (U)", min_value=0.0, step=100.0)
-    u_OSB_3 = st.number_input("OSB - Médico 3 (U)", min_value=0.0, step=100.0)
-    u_OSB = u_OSB_1 + u_OSB_2 + u_OSB_3
-
-    # SMOB - 4 médicos
-    u_SMOB_1 = st.number_input("SMOB - Médico 1 (U)", min_value=0.0, step=100.0)
-    u_SMOB_2 = st.number_input("SMOB - Médico 2 (U)", min_value=0.0, step=100.0)
-    u_SMOB_3 = st.number_input("SMOB - Médico 3 (U)", min_value=0.0, step=100.0)
-    u_SMOB_4 = st.number_input("SMOB - Médico 4 (U)", min_value=0.0, step=100.0)
-    u_SMOB = u_SMOB_1 + u_SMOB_2 + u_SMOB_3 + u_SMOB_4
-
-    # JPP - 2 médicos
-    u_JPP_1 = st.number_input("JPP - Médico 1 (U)", min_value=0.0, step=100.0)
-    u_JPP_2 = st.number_input("JPP - Médico 2 (U)", min_value=0.0, step=100.0)
-    u_JPP = u_JPP_1 + u_JPP_2
-
-    facturacion_urgencias = u_OSB + u_SMOB + u_JPP
+        st.subheader("🚨 Facturación Urgencias")
+    
+        # OSB - 3 médicos
+        u_OSB_1 = st.number_input("OSB - Médico 1 (U)", min_value=0.0, step=100.0)
+        u_OSB_2 = st.number_input("OSB - Médico 2 (U)", min_value=0.0, step=100.0)
+        u_OSB_3 = st.number_input("OSB - Médico 3 (U)", min_value=0.0, step=100.0)
+        u_OSB = u_OSB_1 + u_OSB_2 + u_OSB_3
+    
+        # SMOB - 4 médicos
+        u_SMOB_1 = st.number_input("SMOB - Médico 1 (U)", min_value=0.0, step=100.0)
+        u_SMOB_2 = st.number_input("SMOB - Médico 2 (U)", min_value=0.0, step=100.0)
+        u_SMOB_3 = st.number_input("SMOB - Médico 3 (U)", min_value=0.0, step=100.0)
+        u_SMOB_4 = st.number_input("SMOB - Médico 4 (U)", min_value=0.0, step=100.0)
+        u_SMOB = u_SMOB_1 + u_SMOB_2 + u_SMOB_3 + u_SMOB_4
+    
+        # JPP - 2 médicos
+        u_JPP_1 = st.number_input("JPP - Médico 1 (U)", min_value=0.0, step=100.0)
+        u_JPP_2 = st.number_input("JPP - Médico 2 (U)", min_value=0.0, step=100.0)
+        u_JPP = u_JPP_1 + u_JPP_2
+    
+        facturacion_urgencias = u_OSB + u_SMOB + u_JPP
 
     # --- DISTRIBUCIONES ---
     vithas_total = facturacion_ccee * 0.20 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50  # Vithas Total
