@@ -167,8 +167,8 @@ if menu == "Dashboard Actual":
         facturacion_urgencias = u_OSB + u_SMOB + u_JPP
 
     # --- DISTRIBUCIONES ---
-    vithas_total = facturacion_ccee * 0.20 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50  # Vithas Total
-    osa_total = facturacion_ccee * 0.80 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50     # OSA Total Recibido
+    vithas_total = facturacion_ccee * 0.30 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50  # Vithas Total
+    osa_total = facturacion_ccee * 0.70 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50     # OSA Total Recibido
     
     # --- INPUT: % QUE ME QUEDO DE OSA ---
     mi_porcentaje = st.slider("Selecciona tu porcentaje dentro de OSA (%)", 0, 100, 30)
