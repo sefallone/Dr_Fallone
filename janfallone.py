@@ -178,15 +178,16 @@ if menu == "Dashboard Actual":
     
     osa_restante = osa_total - osa_beneficios
     
-    osa_OSB = ((ccee_OSB * 0.80) + (q_OSB * 0.90) + (u_OSB * 0.50)) * (1 - mi_porcentaje_decimal)
-    osa_SMOB = ((ccee_SMOB * 0.80) + (q_SMOB * 0.90) + (u_SMOB * 0.50)) * (1 - mi_porcentaje_decimal)
-    osa_JPP = ((ccee_JPP * 0.80) + (q_JPP * 0.90) + (u_JPP * 0.50)) * (1 - mi_porcentaje_decimal)
+    osa_OSB = ((ccee_OSB * 0.70) + (q_OSB * 0.90) + (u_OSB * 0.50)) * (1 - mi_porcentaje_decimal)
+    osa_SMOB = ((ccee_SMOB * 0.70) + (q_SMOB * 0.90) + (u_SMOB * 0.50)) * (1 - mi_porcentaje_decimal)
+    osa_JPP = ((ccee_JPP * 0.70) + (q_JPP * 0.90) + (u_JPP * 0.50)) * (1 - mi_porcentaje_decimal)
     
     
     # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
     gf = osa_beneficios * 0.55
     jp = osa_beneficios * 0.225
-    jpp_p = osa_beneficios * 0.225
+    jpp_p = osa_beneficios * 0.125
+    gf2 = osa_beneficios * 0.05
     
     # --- TOTALES ---
     total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urgencias
@@ -229,7 +230,7 @@ if menu == "Dashboard Actual":
         
     
     with st.container():
-        z1, z2, z3, z4, z5 = st.columns(5)
+        z1, z2, z3, z4, z5, z6 = st.columns(6)
         with z1:
             st.metric("🔺 Total OSA BENEFICIOS", f"{osa_beneficios:,.2f} €")
         with z2:
@@ -239,6 +240,8 @@ if menu == "Dashboard Actual":
         with z4:
             st.metric("🔺 Juan Pablo Ortega", f"{jpp_p:,.2f} €")
         with z5:
+            st.metric("🔺 Resto a repartir", f"{gf2:,.2f} €")
+        with z6:
             st.metric("🔺 Total OSA DISTRIBUIR", f"{osa_restante:,.2f} €")
     
     st.markdown("---")
