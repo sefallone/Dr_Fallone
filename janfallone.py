@@ -31,11 +31,61 @@ st.markdown("""
 
 st.title("💼 Distribución de Facturación | VITHAS - OSA")
 
-menu = st.sidebar.radio("Selecciona una sección", ["Dashboard Actual", "Proyección 2026-2032"])
+menu = st.sidebar.radio("Selecciona una sección", ["Dashboard Actual", "Proyección 2026-2032"]) 
 
+# -------------------- METAS (CONFIGURABLES) --------------------
+st.sidebar.header("⚙️ Metas y Umbrales de Distribución")
+meta_junior = st.sidebar.number_input("Meta Junior (€/año)", min_value=0.0, step=1000.0, value=150000.0, key="meta_junior")
+meta_senior = st.sidebar.number_input("Meta Senior (€/año)", min_value=0.0, step=1000.0, value=250000.0, key="meta_senior")
+meta_general = st.sidebar.number_input("Meta General (€/año)", min_value=0.0, step=1000.0, value=350000.0, key="meta_general")
+
+metas = {
+    "junior": meta_junior,
+    "senior": meta_senior,
+    "general": meta_general
+}
+
+# -------------------- FUNCIONES --------------------
+def porcentaje_por_facturacion(bruto, metas):
+    """Devuelve el porcentaje a aplicar según los umbrales (metas).
+    Reglas:
+      - Hasta meta_junior: 70%
+      - Hasta meta_senior: 80%
+      - Hasta meta_general: 90%
+      - Por encima de meta_general: 100%
+    """
+    if bruto <= metas["junior"]:
+        return 0.70
+    elif bruto <= metas["senior"]:
+        return 0.80
+    elif bruto <= metas["general"]:
+        return 0.90
+    else:
+        return 1.00
+
+
+def aplicar_porcentaje_personal(bruto, neto_osa, metas):
+    pct = porcentaje_por_facturacion(bruto, metas)
+    neto_final = neto_osa * pct
+    return neto_final, pct
+
+
+def mostrar_metrica_medico(nombre, bruto, neto_osa, nivel, metas):
+    neto_final, pct = aplicar_porcentaje_personal(bruto, neto_osa, metas)
+    if bruto == 0:
+        delta = "0%"
+    else:
+        diferencia = (neto_final - bruto) / bruto * 100
+        delta = f"{diferencia:+.1f}%"
+    etiqueta = f"{nombre} | Nivel: {nivel} | {int(pct*100)}%"
+    st.metric(label=etiqueta, value=f"{neto_final:,.2f} €", delta=delta, help=f"Facturado bruto: {bruto:,.2f} € \nNeto OSA asignado (antes de nivel): {neto_osa:,.2f} €")
+    return neto_final
+
+
+# -------------------- DASHBOARD --------------------
 if menu == "Dashboard Actual":
 
-        # --- INPUT DE FACTURACIÓN ---
+    # --- INPUT DE FACTURACIÓN ---
     with st.expander("📋 Ingresar Facturación por Especialidad"):
         st.subheader("💳 Facturación CCEE")
     
@@ -44,10 +94,13 @@ if menu == "Dashboard Actual":
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             ccee_OSB_1 = st.number_input("Médico 1 (CCEE)", key="ccee_osb_1", min_value=0.0, step=10.0)
+            nivel_osb_1 = st.selectbox("Nivel Médico 1", ["Junior", "Senior", "General"], key="nivel_osb_1")
         with c2:
             ccee_OSB_2 = st.number_input("Médico 2 (CCEE)", key="ccee_osb_2", min_value=0.0, step=10.0)
+            nivel_osb_2 = st.selectbox("Nivel Médico 2", ["Junior", "Senior", "General"], key="nivel_osb_2")
         with c3:
             ccee_OSB_3 = st.number_input("Médico 3 (CCEE)", key="ccee_osb_3", min_value=0.0, step=10.0)
+            nivel_osb_3 = st.selectbox("Nivel Médico 3", ["Junior", "Senior", "General"], key="nivel_osb_3")
         with c4:
             ccee_OSB = ccee_OSB_1 + ccee_OSB_2 + ccee_OSB_3
             st.metric("Total OSB", f"{ccee_OSB:,.2f} €")
@@ -57,12 +110,16 @@ if menu == "Dashboard Actual":
         s1, s2, s3, s4, s5 = st.columns(5)
         with s1:
             ccee_SMOB_1 = st.number_input("Médico 1 (CCEE)", key="ccee_smob_1", min_value=0.0, step=10.0)
+            nivel_smob_1 = st.selectbox("Nivel SMOB 1", ["Junior", "Senior", "General"], key="nivel_smob_1")
         with s2:
             ccee_SMOB_2 = st.number_input("Médico 2 (CCEE)", key="ccee_smob_2", min_value=0.0, step=10.0)
+            nivel_smob_2 = st.selectbox("Nivel SMOB 2", ["Junior", "Senior", "General"], key="nivel_smob_2")
         with s3:
             ccee_SMOB_3 = st.number_input("Médico 3 (CCEE)", key="ccee_smob_3", min_value=0.0, step=10.0)
+            nivel_smob_3 = st.selectbox("Nivel SMOB 3", ["Junior", "Senior", "General"], key="nivel_smob_3")
         with s4:
             ccee_SMOB_4 = st.number_input("Médico 4 (CCEE)", key="ccee_smob_4", min_value=0.0, step=10.0)
+            nivel_smob_4 = st.selectbox("Nivel SMOB 4", ["Junior", "Senior", "General"], key="nivel_smob_4")
         with s5:
             ccee_SMOB = ccee_SMOB_1 + ccee_SMOB_2 + ccee_SMOB_3 + ccee_SMOB_4
             st.metric("Total SMOB", f"{ccee_SMOB:,.2f} €")
@@ -72,8 +129,10 @@ if menu == "Dashboard Actual":
         j1, j2, j3 = st.columns(3)
         with j1:
             ccee_JPP_1 = st.number_input("Médico 1 (CCEE)", key="ccee_jpp_1", min_value=0.0, step=10.0)
+            nivel_jpp_1 = st.selectbox("Nivel JPP 1", ["Junior", "Senior", "General"], key="nivel_jpp_1")
         with j2:
             ccee_JPP_2 = st.number_input("Médico 2 (CCEE)", key="ccee_jpp_2", min_value=0.0, step=10.0)
+            nivel_jpp_2 = st.selectbox("Nivel JPP 2", ["Junior", "Senior", "General"], key="nivel_jpp_2")
         with j3:
             ccee_JPP = ccee_JPP_1 + ccee_JPP_2
             st.metric("Total JPP", f"{ccee_JPP:,.2f} €")
@@ -167,21 +226,19 @@ if menu == "Dashboard Actual":
         facturacion_urgencias = u_OSB + u_SMOB + u_JPP
 
     # --- DISTRIBUCIONES ---
-    vithas_total = facturacion_ccee * 0.30 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50  # Vithas Total
-    osa_total = facturacion_ccee * 0.70 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50     # OSA Total Recibido
+    vithas_total = facturacion_ccee * 0.30 + facturacion_quirurgico * 0.10 + facturacion_urgencias * 0.50
+    osa_total = facturacion_ccee * 0.70 + facturacion_quirurgico * 0.90 + facturacion_urgencias * 0.50
     
     # --- INPUT: % QUE ME QUEDO DE OSA ---
     mi_porcentaje = st.slider("Selecciona tu porcentaje dentro de OSA (%)", 0, 100, 30)
     mi_porcentaje_decimal = mi_porcentaje / 100
     
-    osa_beneficios = osa_total * mi_porcentaje_decimal   # OSA Total Beneficios
-    
+    osa_beneficios = osa_total * mi_porcentaje_decimal
     osa_restante = osa_total - osa_beneficios
     
     osa_OSB = ((ccee_OSB * 0.70) + (q_OSB * 0.90) + (u_OSB * 0.50)) * (1 - mi_porcentaje_decimal)
     osa_SMOB = ((ccee_SMOB * 0.70) + (q_SMOB * 0.90) + (u_SMOB * 0.50)) * (1 - mi_porcentaje_decimal)
     osa_JPP = ((ccee_JPP * 0.70) + (q_JPP * 0.90) + (u_JPP * 0.50)) * (1 - mi_porcentaje_decimal)
-    
     
     # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
     gf = osa_beneficios * 0.55
@@ -191,18 +248,15 @@ if menu == "Dashboard Actual":
     
     # --- TOTALES ---
     total_facturacion = facturacion_ccee + facturacion_quirurgico + facturacion_urgencias
-    
     total_distribuciones = {
         "OSA": osa_beneficios,
         "OSB (Hombro)": osa_OSB,
         "SMOB (Rodilla)": osa_SMOB,
         "JPP (Pie)": osa_JPP
-        
     }
     
     st.markdown("---")
     st.header("📊 Totales de Facturación")
-    
     with st.container():
         k0, k1, k2, k3, = st.columns(4)
         with k0:
@@ -216,8 +270,6 @@ if menu == "Dashboard Actual":
     
     st.markdown("---")
     st.header("📊 Totales Hospital / Servicio de Traumatología")
-             
-    
     with st.container():
         m1, m2 = st.columns(2)
         with m1:
@@ -227,8 +279,6 @@ if menu == "Dashboard Actual":
     
     st.markdown("---")
     st.header("📊 OSA Beneficios ")
-        
-    
     with st.container():
         z1, z2, z3, z4, z5, z6 = st.columns(6)
         with z1:
@@ -244,17 +294,12 @@ if menu == "Dashboard Actual":
         with z6:
             st.metric("🔺 Total OSA DISTRIBUIR", f"{osa_restante:,.2f} €")
     
+    # --- DISTRIBUCIÓN POR MÉDICO ---
     st.markdown("---")
     st.header("📊 OSA Distribución por Médico")
 
-    def calcular_metrica_médico(nombre, bruto, neto):
-        if bruto == 0:
-            delta = "0%"
-        else:
-            diferencia = (neto - bruto) / bruto * 100
-            delta = f"{diferencia:+.1f}%"
-        st.metric(label=nombre, value=f"{neto:,.2f} €", delta=delta, help=f"Facturado bruto: {bruto:,.2f} €")
-    
+    resultados_por_medico = {}  # para exportar
+
     # --- OSB ---
     st.subheader("🔹 OSB (Hombro y Codo)")
     total_OSB_input = {
@@ -262,21 +307,25 @@ if menu == "Dashboard Actual":
         "Médico 2": ccee_OSB_2 + q_OSB_2 + u_OSB_2,
         "Médico 3": ccee_OSB_3 + q_OSB_3 + u_OSB_3,
     }
+    niveles_OSB = {
+        "Médico 1": nivel_osb_1,
+        "Médico 2": nivel_osb_2,
+        "Médico 3": nivel_osb_3,
+    }
     total_OSB_suma = sum(total_OSB_input.values())
     if total_OSB_suma > 0:
-        dist_OSB = {
-            nombre: (valor / total_OSB_suma) * osa_OSB
-            for nombre, valor in total_OSB_input.items()
-        }
+        dist_OSB = {nombre: (valor / total_OSB_suma) * osa_OSB for nombre, valor in total_OSB_input.items()}
     else:
         dist_OSB = {nombre: 0 for nombre in total_OSB_input}
     
     cols = st.columns(len(dist_OSB))
     for idx, (nombre, bruto) in enumerate(total_OSB_input.items()):
-        neto = dist_OSB[nombre]
+        neto_osa = dist_OSB[nombre]
+        nivel = niveles_OSB[nombre]
         with cols[idx]:
-            calcular_metrica_médico(nombre, bruto, neto)
-    
+            neto_final = mostrar_metrica_medico(nombre, bruto, neto_osa, nivel, metas)
+        resultados_por_medico[nombre + " (OSB)"] = {"bruto": bruto, "neto": neto_final, "nivel": nivel}
+
     # --- SMOB ---
     st.subheader("🔹 SMOB (Rodilla)")
     total_SMOB_input = {
@@ -285,43 +334,50 @@ if menu == "Dashboard Actual":
         "Médico 3": ccee_SMOB_3 + q_SMOB_3 + u_SMOB_3,
         "Médico 4": ccee_SMOB_4 + q_SMOB_4 + u_SMOB_4,
     }
+    niveles_SMOB = {
+        "Médico 1": nivel_smob_1,
+        "Médico 2": nivel_smob_2,
+        "Médico 3": nivel_smob_3,
+        "Médico 4": nivel_smob_4,
+    }
     total_SMOB_suma = sum(total_SMOB_input.values())
     if total_SMOB_suma > 0:
-        dist_SMOB = {
-            nombre: (valor / total_SMOB_suma) * osa_SMOB
-            for nombre, valor in total_SMOB_input.items()
-        }
+        dist_SMOB = {nombre: (valor / total_SMOB_suma) * osa_SMOB for nombre, valor in total_SMOB_input.items()}
     else:
         dist_SMOB = {nombre: 0 for nombre in total_SMOB_input}
     
     cols = st.columns(len(dist_SMOB))
     for idx, (nombre, bruto) in enumerate(total_SMOB_input.items()):
-        neto = dist_SMOB[nombre]
+        neto_osa = dist_SMOB[nombre]
+        nivel = niveles_SMOB[nombre]
         with cols[idx]:
-            calcular_metrica_médico(nombre, bruto, neto)
-    
+            neto_final = mostrar_metrica_medico(nombre, bruto, neto_osa, nivel, metas)
+        resultados_por_medico[nombre + " (SMOB)"] = {"bruto": bruto, "neto": neto_final, "nivel": nivel}
+
     # --- JPP ---
     st.subheader("🔹 JPP (Pie y Tobillo)")
     total_JPP_input = {
         "Médico 1": ccee_JPP_1 + q_JPP_1 + u_JPP_1,
         "Médico 2": ccee_JPP_2 + q_JPP_2 + u_JPP_2,
     }
+    niveles_JPP = {
+        "Médico 1": nivel_jpp_1,
+        "Médico 2": nivel_jpp_2,
+    }
     total_JPP_suma = sum(total_JPP_input.values())
     if total_JPP_suma > 0:
-        dist_JPP = {
-            nombre: (valor / total_JPP_suma) * osa_JPP
-            for nombre, valor in total_JPP_input.items()
-        }
+        dist_JPP = {nombre: (valor / total_JPP_suma) * osa_JPP for nombre, valor in total_JPP_input.items()}
     else:
         dist_JPP = {nombre: 0 for nombre in total_JPP_input}
     
     cols = st.columns(len(dist_JPP))
     for idx, (nombre, bruto) in enumerate(total_JPP_input.items()):
-        neto = dist_JPP[nombre]
+        neto_osa = dist_JPP[nombre]
+        nivel = niveles_JPP[nombre]
         with cols[idx]:
-            calcular_metrica_médico(nombre, bruto, neto)
+            neto_final = mostrar_metrica_medico(nombre, bruto, neto_osa, nivel, metas)
+        resultados_por_medico[nombre + " (JPP)"] = {"bruto": bruto, "neto": neto_final, "nivel": nivel}
 
-    
     # --- GRÁFICO ---
     st.markdown("---")
     st.subheader("📈 Distribución OSA")
@@ -334,11 +390,12 @@ if menu == "Dashboard Actual":
     fig.update_traces(textposition="inside", textinfo="percent+label")
     st.plotly_chart(fig, use_container_width=True)
 
+    # --- DESCARGA EXCEL DASHBOARD ---
     st.markdown("---")
     st.subheader("⬇️ Descargar Datos del Dashboard en Excel")
 
-    # Ejemplo de DataFrame con KPIs
-    dashboard_data = {
+    # DataFrame resumen
+    df_dashboard = pd.DataFrame({
         "Concepto": [
             "Total Facturación", "Facturación CCEE", "Facturación Quirúrgico", "Facturación Urgencias",
             "Total VITHAS", "Total OSA"
@@ -347,25 +404,27 @@ if menu == "Dashboard Actual":
             total_facturacion, facturacion_ccee, facturacion_quirurgico, facturacion_urgencias,
             vithas_total, osa_total
         ]
-    }
-    df_dashboard = pd.DataFrame(dashboard_data)
+    })
 
-    def to_excel_dashboard(df):
+    # Añadir detalle por médico al Excel
+    df_medicos = pd.DataFrame.from_dict(resultados_por_medico, orient='index')
+    df_medicos.index.name = 'Médico (Servicio)'
+
+    def to_excel_dashboard(df1, df2):
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Dashboard')
+            df1.to_excel(writer, index=False, sheet_name='Dashboard')
+            df2.to_excel(writer, sheet_name='Detalle_Medicos')
         processed_data = output.getvalue()
         return processed_data
 
-    excel_dashboard = to_excel_dashboard(df_dashboard)
+    excel_dashboard = to_excel_dashboard(df_dashboard, df_medicos)
     st.download_button(
         label="📅 Descargar Excel del Dashboard",
         data=excel_dashboard,
-        file_name="dashboard_facturacion_actual.xlsx",
+        file_name="dashboard_facturacion_actual_completo.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-    pass
 
 
 elif menu == "Proyección 2026-2032":
@@ -376,7 +435,7 @@ elif menu == "Proyección 2026-2032":
     crecimiento_por_año = {}
     años = list(range(2026, 2033))
     for anio in años:
-        crecimiento_por_año[anio] = st.slider(f"Crecimiento {anio} (%)", 0, 100, 30)
+        crecimiento_por_año[anio] = st.slider(f"Crecimiento {anio} (%)", 0, 100, 30, key=f"crec_{anio}")
 
     proyecciones = []
     valor_actual = base
