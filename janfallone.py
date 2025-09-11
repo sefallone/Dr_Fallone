@@ -55,11 +55,11 @@ def porcentaje_por_facturacion(bruto, metas):
       - Por encima de meta_general: 100%
     """
     if bruto <= metas["junior"]:
-        return 0.70
+        return 0.85
     elif bruto <= metas["senior"]:
-        return 0.80
+        return 0.92
     elif bruto <= metas["general"]:
-        return 0.90
+        return 0.92
     else:
         return 1.00
 
@@ -241,9 +241,9 @@ if menu == "Dashboard Actual":
     osa_JPP = ((ccee_JPP * 0.70) + (q_JPP * 0.90) + (u_JPP * 0.50)) * (1 - mi_porcentaje_decimal)
     
     # --- DISTRIBUCIÓN INTERNA DEL % PERSONAL ---
-    gf = osa_beneficios * 0.55
+    gf = osa_beneficios * 0.60
     jp = osa_beneficios * 0.225
-    jpp_p = osa_beneficios * 0.125
+    jpp_p = osa_beneficios * 0.075
     gf2 = osa_beneficios * 0.05
     
     # --- TOTALES ---
