@@ -21,7 +21,7 @@ st.markdown("""
     }
     .section-header {
         font-size: 1.8rem;
-        color: #CCDAE8;
+        color: #314D2E;
         font-weight: 600;
         margin: 2rem 0 1rem 0;
         padding-left: 0.5rem;
@@ -44,7 +44,7 @@ st.markdown("""
     }
     .metric-value {
         font-size: 1.8rem;
-        color: #8EDB5C;
+        color: #314D2E;
         font-weight: 700;
     }
     .positive-value { color: #27ae60 !important; }
