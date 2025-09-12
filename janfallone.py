@@ -5,14 +5,21 @@ from io import BytesIO
 
 st.set_page_config(page_title="Distribución VITHAS - OSA (Reestructurado)", layout="wide")
 
-# -------------------- Estilos --------------------
+# -------------------- Estilos Mejorados --------------------
 st.markdown("""
 <style>
     .block-container { padding-top: 2rem; }
+    .main-header { font-size: 2.5rem; color: #1f77b4; margin-bottom: 1rem; }
+    .section-header { font-size: 1.8rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.3rem; margin-top: 2rem; }
+    .metric-card { background-color: #f8f9fa; border-radius: 0.5rem; padding: 1rem; border-left: 4px solid #3498db; }
+    .positive-metric { border-left: 4px solid #27ae60; }
+    .negative-metric { border-left: 4px solid #e74c3c; }
+    .dataframe { border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("💼 Distribución de Facturación | VITHAS - OSA (Reestructurado)")
+st.markdown('<h1 class="main-header">💼 Distribución de Facturación | VITHAS - OSA</h1>', unsafe_allow_html=True)
+st.markdown("**Sistema de cálculo y distribución de ingresos**")
 
 # -------------------- Definiciones: niveles y servicios --------------------
 niveles = {
@@ -48,7 +55,8 @@ for medico, nivel in medicos:
 
 df_base = pd.DataFrame(rows, columns=cols)
 
-st.subheader("📋 Ingresar facturación por médico y servicio")
+st.markdown('<h2 class="section-header">📋 Ingresar facturación por médico y servicio</h2>', unsafe_allow_html=True)
+st.info("Introduce los importes de facturación para cada médico y servicio. El total bruto se calculará automáticamente.")
 
 # data_editor permite edición tipo hoja de cálculo
 df_edit = st.data_editor(df_base, num_rows="dynamic", use_container_width=True)
@@ -58,7 +66,7 @@ for s in servicios.keys():
     df_edit[s] = pd.to_numeric(df_edit[s], errors='coerce').fillna(0.0)
 
 # -------------------- Cálculos: totales por médico, por servicio y por nivel --------------------
-# Total bruto por médico (antes de separar VITHAS / OSA)
+# Total bruto por médico (antes de separar VITHAS / OSA) - SIN DEDUCCIONES
 df_edit['Total_Bruto'] = df_edit[list(servicios.keys())].sum(axis=1)
 
 # Totales por servicio (suma columnas)
@@ -136,70 +144,128 @@ osa_saldo_final = total_osa - total_abonado_a_medicos
 
 # -------------------- Resultados en pantalla --------------------
 st.markdown("---")
-st.header("📊 Resumen General de Facturación")
+st.markdown('<h2 class="section-header">📊 Resumen General de Facturación</h2>', unsafe_allow_html=True)
 
 c1, c2, c3, c4 = st.columns(4)
 with c1:
-    st.metric("💰 Total Facturación Bruta", f"{total_bruto:,.2f} €")
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.metric("💰 Total Facturación Bruta", f"{total_bruto:,.2f} €", help="Suma total de todos los servicios sin deducciones")
+    st.markdown('</div>', unsafe_allow_html=True)
 with c2:
-    st.metric("🏥 Total VITHAS (según %)", f"{total_vithas:,.2f} €")
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.metric("🏥 Total VITHAS", f"{total_vithas:,.2f} €", help="Porción que corresponde a VITHAS según los porcentajes establecidos")
+    st.markdown('</div>', unsafe_allow_html=True)
 with c3:
-    st.metric("🟩 Total OSA (pool inicial)", f"{total_osa:,.2f} €")
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.metric("🟩 Total OSA (Pool)", f"{total_osa:,.2f} €", help="Pool total de OSA disponible para distribución")
+    st.markdown('</div>', unsafe_allow_html=True)
 with c4:
-    st.metric("⚖️ Saldo OSA después de abonos", f"{osa_saldo_final:,.2f} €")
+    card_class = "metric-card positive-metric" if osa_saldo_final >= 0 else "metric-card negative-metric"
+    st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+    st.metric("⚖️ Saldo OSA Final", f"{osa_saldo_final:,.2f} €", help="Saldo remanente en OSA después de todos los abonos")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Info adicional
+st.info(f"""
+**Detalles del cálculo:**
+- Facturación Bruta Total: {total_bruto:,.2f} € (100%)
+- Porción VITHAS: {total_vithas:,.2f} € ({total_vithas/total_bruto*100:.1f}%)
+- Pool OSA: {total_osa:,.2f} € ({total_osa/total_bruto*100:.1f}%)
+- Total abonado a médicos: {total_abonado_a_medicos:,.2f} € ({total_abonado_a_medicos/total_osa*100:.1f}% del pool OSA)
+""")
 
 st.markdown("---")
-st.subheader("📌 Totales por Servicio")
+st.markdown('<h2 class="section-header">📌 Distribución por Servicio</h2>', unsafe_allow_html=True)
+
 serv_df = pd.DataFrame({
     'Servicio': list(totales_por_servicio.keys()),
     'Facturación_Total': list(totales_por_servicio.values()),
     'VITHAS': [totales_vithas_por_servicio[s] for s in totales_por_servicio.keys()],
-    'OSA': [totales_osa_por_servicio[s] for s in totales_por_servicio.keys()]
+    'OSA': [totales_osa_por_servicio[s] for s in totales_por_servicio.keys()],
+    '% VITHAS': [servicios[s]['VITHAS'] * 100 for s in totales_por_servicio.keys()],
+    '% OSA': [servicios[s]['OSA'] * 100 for s in totales_por_servicio.keys()]
 })
-st.dataframe(serv_df.style.format({"Facturación_Total": "{:.2f}", "VITHAS": "{:.2f}", "OSA": "{:.2f}"}))
 
-fig_serv = px.pie(serv_df, names='Servicio', values='Facturación_Total', title='Distribución de Facturación por Servicio')
-st.plotly_chart(fig_serv, use_container_width=True)
+col1, col2 = st.columns([1, 1])
+with col1:
+    st.dataframe(serv_df.style.format({
+        "Facturación_Total": "{:,.2f} €", 
+        "VITHAS": "{:,.2f} €", 
+        "OSA": "{:,.2f} €",
+        "% VITHAS": "{:.1f}%",
+        "% OSA": "{:.1f}%"
+    }), use_container_width=True)
+
+with col2:
+    fig_serv = px.pie(serv_df, names='Servicio', values='Facturación_Total', 
+                     title='Distribución de Facturación por Servicio',
+                     hole=0.4)
+    fig_serv.update_traces(textposition='inside', textinfo='percent+label')
+    fig_serv.update_layout(showlegend=False)
+    st.plotly_chart(fig_serv, use_container_width=True)
 
 st.markdown("---")
-st.subheader("📌 Totales por Nivel Jerárquico (Bruto)")
+st.markdown('<h2 class="section-header">📊 Distribución por Nivel Jerárquico</h2>', unsafe_allow_html=True)
 
 nivel_df = pd.DataFrame({
     'Nivel': list(totales_por_nivel.keys()),
-    'Total_Bruto': list(totales_por_nivel.values())
+    'Total_Bruto': list(totales_por_nivel.values()),
+    'Número de Médicos': [df_edit[df_edit['Nivel'] == nivel].shape[0] for nivel in totales_por_nivel.keys()],
+    'Promedio por Médico': [totales_por_nivel[nivel] / df_edit[df_edit['Nivel'] == nivel].shape[0] for nivel in totales_por_nivel.keys()]
 })
-st.dataframe(nivel_df.style.format({"Total_Bruto": "{:.2f}"}))
 
-fig_niv = px.bar(nivel_df, x='Nivel', y='Total_Bruto', title='Total Bruto por Nivel Jerárquico')
-st.plotly_chart(fig_niv, use_container_width=True)
+col1, col2 = st.columns([1, 1])
+with col1:
+    st.dataframe(nivel_df.style.format({
+        "Total_Bruto": "{:,.2f} €", 
+        "Promedio por Médico": "{:,.2f} €"
+    }), use_container_width=True)
+
+with col2:
+    fig_niv = px.bar(nivel_df, x='Nivel', y='Total_Bruto', 
+                    title='Total Bruto por Nivel Jerárquico',
+                    color='Nivel',
+                    text_auto='.2s')
+    fig_niv.update_layout(yaxis_title="Facturación Total (€)")
+    st.plotly_chart(fig_niv, use_container_width=True)
 
 st.markdown("---")
-st.subheader("📋 Detalle por Médico")
+st.markdown('<h2 class="section-header">👨‍⚕️ Detalle por Médico</h2>', unsafe_allow_html=True)
 
 cols_to_show = ['Médico', 'Nivel'] + list(servicios.keys()) + ['Total_Bruto', 'Total_OSA_Disponible', 'Pct_Abono', 'Abonado_a_Medico', 'Queda_en_OSA_por_medico', 'Diferencia_%']
+
+# Añadir estilo condicional para la diferencia %
+def color_diferencia(val):
+    color = 'green' if val > 0 else 'red' if val < 0 else 'gray'
+    return f'color: {color}; font-weight: bold;'
+
 st.dataframe(df_edit[cols_to_show].sort_values(['Nivel', 'Médico']).reset_index(drop=True).style.format({
-    **{s: "{:.2f}" for s in servicios.keys()},
-    'Total_Bruto': "{:.2f}",
-    'Total_OSA_Disponible': "{:.2f}",
-    'Pct_Abono': "{:.2%}",
-    'Abonado_a_Medico': "{:.2f}",
-    'Queda_en_OSA_por_medico': "{:.2f}",
-    'Diferencia_%': "{:.2%}"
-}))
+    **{s: "{:,.2f} €" for s in servicios.keys()},
+    'Total_Bruto': "{:,.2f} €",
+    'Total_OSA_Disponible': "{:,.2f} €",
+    'Pct_Abono': "{:.1%}",
+    'Abonado_a_Medico': "{:,.2f} €",
+    'Queda_en_OSA_por_medico': "{:,.2f} €",
+    'Diferencia_%': "{:+.2%}"
+}).applymap(color_diferencia, subset=['Diferencia_%']), use_container_width=True, height=400)
 
 st.markdown("---")
 c1, c2 = st.columns(2)
 with c1:
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.metric("Promedio Especialistas (Bruto)", f"{promedio_especialistas:,.2f} €")
+    st.markdown('</div>', unsafe_allow_html=True)
 with c2:
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.metric("Promedio Consultores (Bruto)", f"{promedio_consultores:,.2f} €")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if total_abonado_a_medicos > total_osa:
     st.error("⚠️ Atención: El total abonado supera el pool OSA. Revisa los datos.")
 
 # -------------------- Exportar Excel con varias hojas --------------------
 st.markdown("---")
-st.subheader("⬇️ Descargar Datos en Excel")
+st.markdown('<h2 class="section-header">📥 Exportar Resultados</h2>', unsafe_allow_html=True)
 
 hoja_totales_globales = pd.DataFrame({
     'Concepto': ['Total Bruto', 'Total VITHAS', 'Total OSA (pool inicial)', 'Total abonado a médicos', 'Saldo OSA final'],
@@ -222,12 +288,21 @@ def to_excel_multi(h_tot, h_serv, h_niv, h_med):
 excel_bytes = to_excel_multi(hoja_totales_globales, hoja_por_servicio, hoja_por_nivel, hoja_detalle_medicos)
 
 st.download_button(
-    label="📅 Descargar Excel Completo",
+    label="📊 Descargar Excel Completo",
     data=excel_bytes,
     file_name="vithas_osa_reestructurado.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    use_container_width=True,
+    type="primary"
 )
 
+# Notas finales
 st.markdown("---")
-st.write("Hecho ✅ — Ahora los pagos a médicos salen del pool OSA, el saldo se calcula correctamente y se muestra la diferencia porcentual entre lo facturado bruto y lo recibido.")
+st.markdown("**Notas:**")
+st.markdown("""
+- **Facturación Bruta**: Total de ingresos sin deducciones
+- **Pool OSA**: Porción de la facturación destinada a distribución entre médicos
+- **% Abono**: Porcentaje aplicado según nivel y rendimiento
+- **Diferencia %**: Variación entre lo facturado y lo recibido por el médico
+""")
 
