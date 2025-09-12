@@ -322,7 +322,7 @@ with col2:
         yaxis_title="Facturación Total (€)",
         showlegend=False
     )
-    fig_niv.update_traces(texttemplate='%{text:.2s} €', textposition='outside')
+    fig_niv.update_traces(texttemplate='%{:.2s} €', textposition='outside')
     st.plotly_chart(fig_niv, use_container_width=True)
 
 # -------------------- Detalle por Médico --------------------
