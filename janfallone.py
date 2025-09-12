@@ -79,9 +79,8 @@ st.markdown("**Plataforma de gestión y análisis de distribución de ingresos m
 
 # -------------------- Definiciones: niveles y servicios --------------------
 niveles = {
-    "General": ["Fallone", "Puigdellívol", "Ortega", "Aguilar", "Casaccia", "Pons", "Esteban"],
-    "Especialista": ["ME1", "ME2", "ME3", "ME4", "ME5", "ME6"],
-    "Consultor": ["MC1", "MC2", "MC3", "MC4", "MC5", "MC6"]
+    "Especialista": ["Pons", "Sugrañes", "Mayo", "ME3", "ME4", "ME5", "ME6"],
+    "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Barro", "Esteban", "MC4", "MC5", "MC6"]
 }
 
 servicios = {
@@ -164,9 +163,7 @@ for _, row in df_edit.iterrows():
     total_bruto_med = row['Total_Bruto']
     total_osa_med = row['Total_OSA_Disponible']
 
-    if nivel == 'General':
-        pct = 0.95
-    elif nivel == 'Especialista':
+    if nivel == 'Especialista':
         if total_bruto_med > promedio_especialistas:
             pct = 0.90
         else:
@@ -429,6 +426,7 @@ with col2:
     """, unsafe_allow_html=True)
 
 # -------------------- Footer --------------------
+"""
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #6c757d; font-size: 0.9rem;'>
@@ -437,3 +435,4 @@ st.markdown("""
     © 2024
 </div>
 """, unsafe_allow_html=True)
+"""
