@@ -13,7 +13,7 @@ st.markdown("""
 <style>
     .main-header {
         font-size: 2.8rem;
-        color: #21381D;  
+        color: #DAEDD5;  
         font-weight: 700;
         margin-bottom: 0.5rem;
         border-bottom: 3px solid #3498db;
@@ -28,7 +28,7 @@ st.markdown("""
         border-left: 4px solid #3498db;
     }
     .metric-card {
-        background: linear-gradient(135deg, #2B4225 0%, #CEEBC7 100%);
+        background: linear-gradient(135deg, #2B4225 0%, #2c3e50 100%);
         border-radius: 10px;
         padding: 1.5rem;
         border: 1px solid #dee2e6;
@@ -38,7 +38,7 @@ st.markdown("""
     }
     .metric-title {
         font-size: 1rem;
-        color: #6c757d;
+        color: #E9EFF5;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
