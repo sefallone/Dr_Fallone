@@ -406,7 +406,7 @@ def generar_excel():
 
 excel_data = generar_excel()
 
-col1, col2 = st.columns([1, 3])
+col1 = st.columns([1])
 with col1:
     st.download_button(
         label="📥 Descargar Excel Completo",
@@ -416,14 +416,14 @@ with col1:
         use_container_width=True
     )
 
-with col2:
-    st.markdown("""
-    <div class="info-box">
-        <strong>Información del Reporte:</strong> El archivo Excel contiene cuatro hojas: 
-        Totales globales, distribución por servicio, totales por nivel jerárquico, 
-        y detalle completo por médico con todos los cálculos aplicados.
-    </div>
-    """, unsafe_allow_html=True)
+#with col2:
+   # st.markdown("""
+  #  <div class="info-box">
+    #    <strong>Información del Reporte:</strong> El archivo Excel contiene cuatro hojas: 
+    #    Totales globales, distribución por servicio, totales por nivel jerárquico, 
+    #    y detalle completo por médico con todos los cálculos aplicados.
+   # </div>
+   # """, unsafe_allow_html=True)
 
 # -------------------- Footer --------------------
 
