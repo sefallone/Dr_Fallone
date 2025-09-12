@@ -51,14 +51,11 @@ def porcentaje_por_facturacion(bruto, metas):
     Reglas:
       - Hasta meta_junior: 70%
       - Hasta meta_senior: 80%
-      - Hasta meta_general: 90%
-      - Por encima de meta_general: 100%
+      
     """
     if bruto <= metas["junior"]:
         return 0.85
     elif bruto <= metas["senior"]:
-        return 0.92
-    elif bruto <= metas["general"]:
         return 0.92
     else:
         return 1.00
