@@ -49,16 +49,14 @@ for medico, nivel in medicos:
 df_base = pd.DataFrame(rows, columns=cols)
 
 st.subheader("📋 Ingresar facturación por médico y servicio")
-
-# data_editor permite edición tipo hoja de cálculo
 df_edit = st.data_editor(df_base, num_rows="dynamic", use_container_width=True)
 
-# Asegurarnos de que las columnas de servicios sean numéricas
+# Asegurar columnas numéricas
 for s in servicios.keys():
     df_edit[s] = pd.to_numeric(df_edit[s], errors='coerce').fillna(0.0)
 
-# -------------------- Cálculos: totales por médico, por servicio y por nivel --------------------
-# Total bruto por médico (antes de separar VITHAS / OSA)
+# -------------------- Cálculos --------------------
+# Totales brutos por médico (suma de todos los servicios, siempre visible)
 df_edit['Total_Bruto'] = df_edit[list(servicios.keys())].sum(axis=1)
 
 # Totales por servicio (suma columnas)
@@ -73,24 +71,29 @@ total_bruto = df_edit['Total_Bruto'].sum()
 total_vithas = sum(totales_vithas_por_servicio.values())
 total_osa = sum(totales_osa_por_servicio.values())
 
-# -------------------- Cálculo de OSA disponible por médico --------------------
+# -------------------- Cálculo OSA disponible por médico --------------------
 osa_por_medico = []
+total_vithas_por_medico = []
 for _, row in df_edit.iterrows():
     total_osa_med = 0.0
+    total_vithas_med = 0.0
     for s in servicios.keys():
         total_osa_med += row[s] * servicios[s]['OSA']
+        total_vithas_med += row[s] * servicios[s]['VITHAS']
     osa_por_medico.append(total_osa_med)
+    total_vithas_por_medico.append(total_vithas_med)
 
 df_edit['Total_OSA_Disponible'] = osa_por_medico
+df_edit['Total_VITHAS'] = total_vithas_por_medico
 
-# Totales por nivel (brutos)
+# Totales por nivel (bruto)
 totales_por_nivel = df_edit.groupby('Nivel')['Total_Bruto'].sum().to_dict()
 
-# Promedios por grupo (Especialistas y Consultores, usando bruto)
+# Promedios por grupo (Especialistas y Consultores)
 promedio_especialistas = df_edit[df_edit['Nivel'] == 'Especialista']['Total_Bruto'].mean() if not df_edit[df_edit['Nivel'] == 'Especialista'].empty else 0.0
 promedio_consultores = df_edit[df_edit['Nivel'] == 'Consultor']['Total_Bruto'].mean() if not df_edit[df_edit['Nivel'] == 'Consultor'].empty else 0.0
 
-# -------------------- Aplicación de reglas de abono (sobre OSA disponible) --------------------
+# -------------------- Aplicación reglas abono --------------------
 pct_aplicado = []
 abonado = []
 por_osa_queda = []
@@ -103,15 +106,9 @@ for _, row in df_edit.iterrows():
     if nivel == 'General':
         pct = 0.95
     elif nivel == 'Especialista':
-        if total_bruto > promedio_especialistas:
-            pct = 0.90
-        else:
-            pct = 0.85
+        pct = 0.90 if total_bruto > promedio_especialistas else 0.85
     elif nivel == 'Consultor':
-        if total_bruto > promedio_consultores:
-            pct = 0.92
-        else:
-            pct = 0.88
+        pct = 0.92 if total_bruto > promedio_consultores else 0.88
     else:
         pct = 0.0
 
@@ -122,27 +119,25 @@ for _, row in df_edit.iterrows():
     abonado.append(pagado)
     por_osa_queda.append(queda_osa)
 
-# Añadir columnas al DataFrame
 df_edit['Pct_Abono'] = pct_aplicado
 df_edit['Abonado_a_Medico'] = abonado
 df_edit['Queda_en_OSA_por_medico'] = por_osa_queda
 
-# Diferencia porcentual entre lo que facturó bruto y lo que recibió
+# Diferencia porcentual entre lo facturado bruto y lo recibido
 df_edit['Diferencia_%'] = (df_edit['Abonado_a_Medico'] / df_edit['Total_Bruto'] - 1).replace([float('inf'), -float('inf')], 0.0).fillna(0.0)
 
-# Totales resultantes de los abonos
-total_abonado_a_medicos = sum(abonado)
+# Totales de abono y saldo OSA
+ total_abonado_a_medicos = sum(abonado)
 osa_saldo_final = total_osa - total_abonado_a_medicos
 
 # -------------------- Resultados en pantalla --------------------
 st.markdown("---")
 st.header("📊 Resumen General de Facturación")
-
 c1, c2, c3, c4 = st.columns(4)
 with c1:
     st.metric("💰 Total Facturación Bruta", f"{total_bruto:,.2f} €")
 with c2:
-    st.metric("🏥 Total VITHAS (según %)", f"{total_vithas:,.2f} €")
+    st.metric("🏥 Total VITHAS", f"{total_vithas:,.2f} €")
 with c3:
     st.metric("🟩 Total OSA (pool inicial)", f"{total_osa:,.2f} €")
 with c4:
@@ -157,77 +152,18 @@ serv_df = pd.DataFrame({
     'OSA': [totales_osa_por_servicio[s] for s in totales_por_servicio.keys()]
 })
 st.dataframe(serv_df.style.format({"Facturación_Total": "{:.2f}", "VITHAS": "{:.2f}", "OSA": "{:.2f}"}))
-
 fig_serv = px.pie(serv_df, names='Servicio', values='Facturación_Total', title='Distribución de Facturación por Servicio')
 st.plotly_chart(fig_serv, use_container_width=True)
 
 st.markdown("---")
 st.subheader("📌 Totales por Nivel Jerárquico (Bruto)")
-
-nivel_df = pd.DataFrame({
-    'Nivel': list(totales_por_nivel.keys()),
-    'Total_Bruto': list(totales_por_nivel.values())
-})
+nivel_df = pd.DataFrame({'Nivel': list(totales_por_nivel.keys()), 'Total_Bruto': list(totales_por_nivel.values())})
 st.dataframe(nivel_df.style.format({"Total_Bruto": "{:.2f}"}))
-
 fig_niv = px.bar(nivel_df, x='Nivel', y='Total_Bruto', title='Total Bruto por Nivel Jerárquico')
 st.plotly_chart(fig_niv, use_container_width=True)
 
 st.markdown("---")
 st.subheader("📋 Detalle por Médico")
+cols_to_show = ['Médico', 'Nivel'] + list(servicios.keys()) + ['Total_Bruto', 'Total_VITHAS', 'Total_OSA_Disponible', 'Pct
 
-cols_to_show = ['Médico', 'Nivel'] + list(servicios.keys()) + ['Total_Bruto', 'Total_OSA_Disponible', 'Pct_Abono', 'Abonado_a_Medico', 'Queda_en_OSA_por_medico', 'Diferencia_%']
-st.dataframe(df_edit[cols_to_show].sort_values(['Nivel', 'Médico']).reset_index(drop=True).style.format({
-    **{s: "{:.2f}" for s in servicios.keys()},
-    'Total_Bruto': "{:.2f}",
-    'Total_OSA_Disponible': "{:.2f}",
-    'Pct_Abono': "{:.2%}",
-    'Abonado_a_Medico': "{:.2f}",
-    'Queda_en_OSA_por_medico': "{:.2f}",
-    'Diferencia_%': "{:.2%}"
-}))
-
-st.markdown("---")
-c1, c2 = st.columns(2)
-with c1:
-    st.metric("Promedio Especialistas (Bruto)", f"{promedio_especialistas:,.2f} €")
-with c2:
-    st.metric("Promedio Consultores (Bruto)", f"{promedio_consultores:,.2f} €")
-
-if total_abonado_a_medicos > total_osa:
-    st.error("⚠️ Atención: El total abonado supera el pool OSA. Revisa los datos.")
-
-# -------------------- Exportar Excel con varias hojas --------------------
-st.markdown("---")
-st.subheader("⬇️ Descargar Datos en Excel")
-
-hoja_totales_globales = pd.DataFrame({
-    'Concepto': ['Total Bruto', 'Total VITHAS', 'Total OSA (pool inicial)', 'Total abonado a médicos', 'Saldo OSA final'],
-    'Valor (€)': [total_bruto, total_vithas, total_osa, total_abonado_a_medicos, osa_saldo_final]
-})
-
-hoja_por_servicio = serv_df.copy()
-hoja_por_nivel = nivel_df.copy()
-hoja_detalle_medicos = df_edit[cols_to_show].copy()
-
-def to_excel_multi(h_tot, h_serv, h_niv, h_med):
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        h_tot.to_excel(writer, index=False, sheet_name='Totales_Globales')
-        h_serv.to_excel(writer, index=False, sheet_name='Por_Servicio')
-        h_niv.to_excel(writer, index=False, sheet_name='Por_Nivel')
-        h_med.to_excel(writer, index=False, sheet_name='Detalle_Medicos')
-    return output.getvalue()
-
-excel_bytes = to_excel_multi(hoja_totales_globales, hoja_por_servicio, hoja_por_nivel, hoja_detalle_medicos)
-
-st.download_button(
-    label="📅 Descargar Excel Completo",
-    data=excel_bytes,
-    file_name="vithas_osa_reestructurado.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
-
-st.markdown("---")
-st.write("Hecho ✅ — Ahora los pagos a médicos salen del pool OSA, el saldo se calcula correctamente y se muestra la diferencia porcentual entre lo facturado bruto y lo recibido.")
 
