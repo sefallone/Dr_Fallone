@@ -127,7 +127,7 @@ df_edit['Queda_en_OSA_por_medico'] = por_osa_queda
 df_edit['Diferencia_%'] = (df_edit['Abonado_a_Medico'] / df_edit['Total_Bruto'] - 1).replace([float('inf'), -float('inf')], 0.0).fillna(0.0)
 
 # Totales de abono y saldo OSA
- total_abonado_a_medicos = sum(abonado)
+total_abonado_a_medicos = sum(abonado)
 osa_saldo_final = total_osa - total_abonado_a_medicos
 
 # -------------------- Resultados en pantalla --------------------
