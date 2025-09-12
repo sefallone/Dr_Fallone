@@ -21,14 +21,14 @@ st.markdown("""
     }
     .section-header {
         font-size: 1.8rem;
-        color: #2c3e50;
+        color: #CCDAE8;
         font-weight: 600;
         margin: 2rem 0 1rem 0;
         padding-left: 0.5rem;
         border-left: 4px solid #3498db;
     }
     .metric-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, #2B4225 0%, #CEEBC7 100%);
         border-radius: 10px;
         padding: 1.5rem;
         border: 1px solid #dee2e6;
