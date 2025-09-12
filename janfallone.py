@@ -28,7 +28,7 @@ st.markdown("""
         border-left: 4px solid #3498db;
     }
     .metric-card {
-        background: linear-gradient(135deg, #2B4225 0%, #2c3e50 100%);
+        background: linear-gradient(135deg, #2B4225 0%, #8EDB5C 100%);
         border-radius: 10px;
         padding: 1.5rem;
         border: 1px solid #dee2e6;
@@ -44,7 +44,7 @@ st.markdown("""
     }
     .metric-value {
         font-size: 1.8rem;
-        color: #2c3e50;
+        color: #8EDB5C;
         font-weight: 700;
     }
     .positive-value { color: #27ae60 !important; }
