@@ -66,7 +66,7 @@ st.markdown("""
         font-weight: 600;
     }
     .info-box {
-        background-color: #e8f4fd;
+        background-color: #E9EFF5;
         border-left: 4px solid #3498db;
         padding: 1rem;
         border-radius: 4px;
