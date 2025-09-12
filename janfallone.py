@@ -406,15 +406,15 @@ def generar_excel():
 
 excel_data = generar_excel()
 
-col1 = st.columns([1])
-with col1:
-    st.download_button(
-        label="📥 Descargar Excel Completo",
-        data=excel_data,
-        file_name="distribucion_vithas_osa.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True
-    )
+#col1 = st.columns([1])
+#with col1:
+st.download_button(
+    label="📥 Descargar Excel Completo",
+    data=excel_data,
+    file_name="distribucion_vithas_osa.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    use_container_width=True
+)
 
 #with col2:
    # st.markdown("""
