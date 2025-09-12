@@ -6,12 +6,14 @@ from io import BytesIO
 
 st.set_page_config(page_title="Sistema de Distribución VITHAS-OSA", layout="wide", page_icon="💼")
 
+# 2c3e50
+
 # -------------------- Estilos Profesionales --------------------
 st.markdown("""
 <style>
     .main-header {
         font-size: 2.8rem;
-        color: #2c3e50;
+        color: #21381D;  
         font-weight: 700;
         margin-bottom: 0.5rem;
         border-bottom: 3px solid #3498db;
