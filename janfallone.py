@@ -28,7 +28,7 @@ st.markdown("""
         border-left: 4px solid #3498db;
     }
     .metric-card {
-        background: linear-gradient(135deg, #2B4225 0%, #8EDB5C 100%);
+        background: linear-gradient(135deg, #2B4225 0%, #2B4225 100%);
         border-radius: 10px;
         padding: 1.5rem;
         border: 1px solid #dee2e6;
@@ -208,7 +208,7 @@ with col1:
     <div class="metric-card">
         <div class="metric-title">Facturación Bruta Total</div>
         <div class="metric-value">{:,.2f} €</div>
-        <div style='font-size: 0.9rem; color: #6c757d;'>Suma total sin deducciones</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>Suma total sin deducciones</div>
     </div>
     """.format(total_bruto), unsafe_allow_html=True)
 
@@ -217,7 +217,7 @@ with col2:
     <div class="metric-card">
         <div class="metric-title">Porción VITHAS</div>
         <div class="metric-value">{:,.2f} €</div>
-        <div style='font-size: 0.9rem; color: #6c757d;'>{:.1f}% del total</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>{:.1f}% del total</div>
     </div>
     """.format(total_vithas, (total_vithas/total_bruto)*100 if total_bruto > 0 else 0), unsafe_allow_html=True)
 
@@ -226,7 +226,7 @@ with col3:
     <div class="metric-card">
         <div class="metric-title">Pool OSA</div>
         <div class="metric-value">{:,.2f} €</div>
-        <div style='font-size: 0.9rem; color: #6c757d;'>{:.1f}% del total</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>{:.1f}% del total</div>
     </div>
     """.format(total_osa, (total_osa/total_bruto)*100 if total_bruto > 0 else 0), unsafe_allow_html=True)
 
@@ -236,7 +236,7 @@ with col4:
     <div class="metric-card">
         <div class="metric-title">Saldo OSA Final</div>
         <div class="metric-value {}">{:,.2f} €</div>
-        <div style='font-size: 0.9rem; color: #6c757d;'>Después de distribución</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>Después de distribución</div>
     </div>
     """.format(saldo_class, osa_saldo_final), unsafe_allow_html=True)
 
@@ -362,7 +362,7 @@ with c1:
     <div class="metric-card">
         <div class="metric-title">Promedio Especialistas (Bruto)</div>
         <div class="metric-value">{:,.2f} €</div>
-        <div style='font-size: 0.9rem; color: #6c757d;'>Base para cálculo de porcentajes</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>Base para cálculo de porcentajes</div>
     </div>
     """.format(promedio_especialistas), unsafe_allow_html=True)
 
@@ -371,7 +371,7 @@ with c2:
     <div class="metric-card">
         <div class="metric-title">Promedio Consultores (Bruto)</div>
         <div class="metric-value">{:,.2f} €</div>
-        <div style='font-size: 0.9rem; color: #6c757d;'>Base para cálculo de porcentajes</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>Base para cálculo de porcentajes</div>
     </div>
     """.format(promedio_consultores), unsafe_allow_html=True)
 
