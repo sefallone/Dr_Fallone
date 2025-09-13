@@ -379,6 +379,201 @@ with c2:
 if total_abonado_a_medicos > total_osa:
     st.error("⚠️ Atención: El total abonado supera el pool OSA. Revisa los datos.")
 
+# -------------------- NUEVA SECCIÓN: EXPLICACIÓN PARA MÉDICOS --------------------
+st.markdown("---")
+st.markdown('<div class="section-header">👨‍⚕️ Explicación de Abonos para Médicos</div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="info-box">
+    <strong>¿Cómo se calcula tu abono?</strong><br>
+    Esta sección te explica de forma clara cómo calculamos el importe que recibirás cada mes.
+    El sistema distribuye los ingresos según el tipo de servicio prestado y tu nivel jerárquico.
+</div>
+""", unsafe_allow_html=True)
+
+# Tarjetas con los promedios de referencia
+st.markdown("#### 📊 Promedios de Referencia")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-title">Promedio Especialistas</div>
+        <div class="metric-value">{promedio_especialistas:,.2f} €</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>
+            Los especialistas que superan este promedio reciben el 90% del pool OSA
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-title">Promedio Consultores</div>
+        <div class="metric-value">{promedio_consultores:,.2f} €</div>
+        <div style='font-size: 0.9rem; color: #E9EFF5;'>
+            Los consultores que superan este promedio reciben el 92% del pool OSA
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Explicación del proceso
+st.markdown("#### 🔍 ¿Cómo se calcula tu abono?")
+
+st.markdown("""
+<div style="background-color: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+    <ol>
+        <li><strong>Facturación por servicio</strong>: Registramos tu facturación en cada tipo de servicio</li>
+        <li><strong>Distribución VITHAS/OSA</strong>: Aplicamos los porcentajes establecidos por servicio
+            <ul>
+                <li>Consultas: 30% VITHAS / 70% OSA</li>
+                <li>Quirúrgicas: 10% VITHAS / 90% OSA</li>
+                <li>Urgencias: 50% VITHAS / 50% OSA</li>
+                <li>... y así para cada servicio</li>
+            </ul>
+        </li>
+        <li><strong>Pool OSA disponible</strong>: Calculamos la parte de OSA que te corresponde</li>
+        <li><strong>Porcentaje de abono</strong>: Aplicamos el porcentaje según tu nivel y desempeño:
+            <ul>
+                <li>Especialistas sobre promedio: 90%</li>
+                <li>Especialistas bajo promedio: 85%</li>
+                <li>Consultores sobre promedio: 92%</li>
+                <li>Consultores bajo promedio: 88%</li>
+            </ul>
+        </li>
+    </ol>
+</div>
+""", unsafe_allow_html=True)
+
+# Selector de médico para ver detalles individuales
+st.markdown("#### 👤 Consulta tu detalle personal")
+medicos_lista = [f"{m[0]} ({m[1]})" for m in medicos]
+medico_seleccionado = st.selectbox("Selecciona tu nombre:", medicos_lista, key="medico_selector")
+
+# Obtener el médico seleccionado
+medico_nombre = medico_seleccionado.split(" (")[0]
+medico_data = df_edit[df_edit['Médico'] == medico_nombre].iloc[0]
+
+# Mostrar detalles del médico seleccionado
+if not medico_data.empty:
+    st.markdown(f"##### Detalle para: **{medico_nombre}**")
+    
+    # Tarjetas con información clave
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Facturación Total</div>
+            <div class="metric-value">{medico_data['Total_Bruto']:,.2f} €</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Pool OSA Disponible</div>
+            <div class="metric-value">{medico_data['Total_OSA_Disponible']:,.2f} €</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        # Determinar color según diferencia
+        diff_color = "positive-value" if medico_data['Diferencia_%'] >= 0 else "negative-value"
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Abono Final</div>
+            <div class="metric-value">{medico_data['Abonado_a_Medico']:,.2f} €</div>
+            <div class="metric-title {diff_color}">Diferencia: {medico_data['Diferencia_%']:+.2%}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Explicación personalizada
+    st.markdown("#### 📝 Explicación de tu cálculo")
+    
+    # Determinar mensaje según nivel y desempeño
+    nivel = medico_data['Nivel']
+    bruto = medico_data['Total_Bruto']
+    promedio = promedio_especialistas if nivel == "Especialista" else promedio_consultores
+    sobre_promedio = bruto > promedio
+    
+    if nivel == "Especialista":
+        porcentaje = "90%" if sobre_promedio else "85%"
+        mensaje = "superas" if sobre_promedio else "no superas"
+    else:
+        porcentaje = "92%" if sobre_promedio else "88%"
+        mensaje = "superas" if sobre_promedio else "no superas"
+    
+    st.markdown(f"""
+    <div style="background-color: #e8f4f8; padding: 15px; border-radius: 10px; border-left: 4px solid #3498db; margin: 15px 0;">
+        <p>Como <strong>{nivel}</strong>, tu facturación bruta es de <strong>{bruto:,.2f} €</strong>.</p>
+        <p>El promedio de tu grupo es <strong>{promedio:,.2f} €</strong>, por lo que <strong>{mensaje}</strong> el promedio.</p>
+        <p>Esto significa que recibes el <strong>{porcentaje}</strong> de tu pool OSA disponible.</p>
+        <p>Tu pool OSA disponible es de <strong>{medico_data['Total_OSA_Disponible']:,.2f} €</strong>, 
+        por lo que tu abono final es de <strong>{medico_data['Abonado_a_Medico']:,.2f} €</strong>.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Desglose por servicios
+    st.markdown("##### 🧮 Desglose por servicios")
+    servicios_data = []
+    for servicio in servicios.keys():
+        servicio_valor = medico_data[servicio]
+        if servicio_valor > 0:
+            vithas_porc = servicios[servicio]['VITHAS'] * 100
+            osa_porc = servicios[servicio]['OSA'] * 100
+            osa_valor = servicio_valor * servicios[servicio]['OSA']
+            servicios_data.append({
+                'Servicio': servicio,
+                'Facturación': servicio_valor,
+                '% OSA': f"{osa_porc:.0f}%",
+                'OSA Obtenido': osa_valor
+            })
+    
+    if servicios_data:
+        servicios_df = pd.DataFrame(servicios_data)
+        st.dataframe(
+            servicios_df.style.format({
+                'Facturación': '{:,.2f} €',
+                'OSA Obtenido': '{:,.2f} €'
+            }),
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info("No hay facturación registrada para los servicios disponibles.")
+
+# Información adicional sobre el proceso
+with st.expander("📖 Más información sobre el proceso de distribución"):
+    st.markdown("""
+    **Preguntas frecuentes:**
+    
+    **¿Por qué diferentes porcentajes por servicio?**
+    Cada servicio tiene diferentes costes asociados y acuerdos contractuales, 
+    lo que justifica diferentes repartos entre VITHAS y OSA.
+    
+    **¿Por qué diferentes porcentajes según el nivel?**
+    Los especialistas y consultores tienen diferentes esquemas retributivos según 
+    su experiencia, responsabilidad y acuerdo contractual.
+    
+    **¿Qué pasa con el saldo que queda en OSA?**
+    El saldo remanente en OSA se utiliza para cubrir gastos de estructura, 
+    inversiones en equipamiento y desarrollo de nuevos servicios que benefician 
+    a toda la comunidad médica.
+    
+    **¿Cómo puedo mejorar mi porcentaje de abono?**
+    Alcanzando o superando el promedio de facturación de tu grupo, lo que te 
+    permite acceder a un porcentaje mayor del pool OSA disponible.
+    """)
+
+# Nota final
+st.markdown("""
+<div class="info-box">
+    <strong>¿Tienes dudas?</strong> Contacta con el departamento de administración para 
+    aclarar cualquier pregunta sobre tu facturación o el proceso de distribución.
+</div>
+""", unsafe_allow_html=True)
+
 # -------------------- Exportación --------------------
 st.markdown('<div class="section-header">💾 Exportar Resultados</div>', unsafe_allow_html=True)
 
@@ -437,4 +632,3 @@ st.download_button(
    # © 2024
 #</div>
 #""", unsafe_allow_html=True)
-
