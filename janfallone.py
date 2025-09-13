@@ -82,12 +82,12 @@ st.markdown("**Plataforma de gestión y análisis de distribución de ingresos m
 # -------------------- Definiciones: niveles y servicios --------------------
 niveles = {
     "Especialista": ["Pons", "Sugrañes", "Mayo", "ME3", "ME4", "ME5", "ME6"],
-    "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Barro", "Esteban", "MC4", "MC5", "MC6"]
+    "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Esteban", "MC4", "MC5", "MC6"]
 }
 
 servicios = {
     "Consultas": {"VITHAS": 0.30, "OSA": 0.70},
-    "Quirúrgicas": {"VITHAS": 0.10, "OSA": 0.90},
+    "Cirugías": {"VITHAS": 0.10, "OSA": 0.90},
     "Urgencias": {"VITHAS": 0.50, "OSA": 0.50},
     "Ecografías": {"VITHAS": 0.60, "OSA": 0.40},
     "Prótesis y MQX": {"VITHAS": 0.00, "OSA": 1.00},
@@ -149,11 +149,11 @@ for _, row in df_edit.iterrows():
 df_edit['Total_OSA_Disponible'] = osa_por_medico
 
 # Totales por nivel (brutos)
-totales_por_nivel = df_edit.groupby('Nivel')['Total_Bruto'].sum().to_dict()
+totales_por_nivel = df_edit.groupby('Nivel')['total_osa'].sum().to_dict()
 
 # Promedios por grupo (Especialistas y Consultores, usando bruto)
-promedio_especialistas = df_edit[df_edit['Nivel'] == 'Especialista']['Total_Bruto'].mean() if not df_edit[df_edit['Nivel'] == 'Especialista'].empty else 0.0
-promedio_consultores = df_edit[df_edit['Nivel'] == 'Consultor']['Total_Bruto'].mean() if not df_edit[df_edit['Nivel'] == 'Consultor'].empty else 0.0
+promedio_especialistas = df_edit[df_edit['Nivel'] == 'Especialista']['total_osa'].mean() if not df_edit[df_edit['Nivel'] == 'Especialista'].empty else 0.0
+promedio_consultores = df_edit[df_edit['Nivel'] == 'Consultor']['total_osa'].mean() if not df_edit[df_edit['Nivel'] == 'Consultor'].empty else 0.0
 
 # -------------------- Aplicación de reglas de abono (sobre OSA disponible) --------------------
 pct_aplicado = []
@@ -166,12 +166,12 @@ for _, row in df_edit.iterrows():
     total_osa_med = row['Total_OSA_Disponible']
 
     if nivel == 'Especialista':
-        if total_bruto_med > promedio_especialistas:
+        if total_osa_med > promedio_especialistas:
             pct = 0.90
         else:
             pct = 0.85
     elif nivel == 'Consultor':
-        if total_bruto_med > promedio_consultores:
+        if total_osa_med > promedio_consultores:
             pct = 0.92
         else:
             pct = 0.88
@@ -191,7 +191,7 @@ df_edit['Abonado_a_Medico'] = abonado
 df_edit['Queda_en_OSA_por_medico'] = por_osa_queda
 
 # Diferencia porcentual entre lo que facturó bruto y lo que recibió
-df_edit['Diferencia_%'] = (df_edit['Abonado_a_Medico'] / df_edit['Total_Bruto'] - 1).replace([float('inf'), -float('inf')], 0.0).fillna(0.0)
+df_edit['Diferencia_%'] = (df_edit['Abonado_a_Medico'] / df_edit['total_osa'] - 1).replace([float('inf'), -float('inf')], 0.0).fillna(0.0)
 
 # Totales resultantes de los abonos
 total_abonado_a_medicos = sum(abonado)
