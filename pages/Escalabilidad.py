@@ -9,14 +9,14 @@ st.markdown("""
 El sistema de pago funciona en **tres pasos**:
 
 1. Cada médico genera una **facturación bruta total** por servicio.
-2. Esa facturación se reparte entre **VITHAS** y **OSA**, según porcentajes.
-3. Del pool OSA, se calcula cuánto se le **abona al médico** según su nivel y comparación con el promedio de su grupo.
+2. Esa facturación se reparte entre **VITHAS** y **OSA**, según porcentajes acordados en negociación (Aún se están negociando algunos servicios).
+3. Del pool OSA (Todo lo que entra a OSA), se calcula cuánto se le **abona al médico** según su nivel y comparación con el promedio de su grupo.
 """)
 
 # -------------------- Definición de médicos y servicios --------------------
 niveles = {
-    "Especialista": ["Pons", "Sugrañes", "Mayo", "ME3", "ME4", "ME5", "ME6"],
-    "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Barro", "Esteban", "MC4", "MC5", "MC6"]
+    "Especialista": ["ME1", "ME2", "ME3", "ME4", "ME5"],
+    "Consultor": ["MC1", "MC2", "MC3", "MC4", "MC5"]
 }
 
 servicios = {
@@ -24,7 +24,7 @@ servicios = {
     "Quirúrgicas": {"VITHAS": 0.10, "OSA": 0.90},
     "Urgencias": {"VITHAS": 0.50, "OSA": 0.50},
     "Ecografías": {"VITHAS": 0.60, "OSA": 0.40},
-    "Prótesis y MQX": {"VITHAS": 0.00, "OSA": 1.00},
+    "MQX": {"VITHAS": 0.00, "OSA": 1.00},
     "Pacientes INTL": {"VITHAS": 0.40, "OSA": 0.60},
     "Rehabilitación": {"VITHAS": 0.40, "OSA": 0.60},
     "Podología": {"VITHAS": 0.30, "OSA": 0.70}
