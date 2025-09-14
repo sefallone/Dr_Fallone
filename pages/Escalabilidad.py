@@ -88,15 +88,26 @@ st.markdown("### 👨‍⚕️ Reporte Interactivo del Médico")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
-# -------------------- Mini-dashboard de reporte del médico --------------------
+# -------------------- Mensaje personalizado sobre el promedio --------------------
+nivel_medico = row["Nivel"]
+promedio_nivel = promedios_nivel[nivel_medico]
+if row["Total_Bruto"] > promedio_nivel:
+    mensaje = f"Doctor {medico_sel}, usted está por ARRIBA del promedio de facturación de su grupo."
+else:
+    mensaje = f"Doctor {medico_sel}, usted está por ABAJO del promedio de facturación de su grupo."
+
+st.success(mensaje)
+
+# -------------------- Mini-dashboard de reporte del médico (KPI tipo tarjeta) --------------------
 st.markdown("### 📝 Mini-Reporte del Médico")
 
-# Filtrar servicios con facturación > 0
 serv_no_cero = {s: row[s] for s in servicios.keys() if row[s] > 0}
 serv_cero = [s for s in servicios.keys() if row[s] == 0]
 
-num_cols = 3
+num_cols = 4  # columnas por fila
 num_filas = math.ceil(len(serv_no_cero)/num_cols)
+
+colores_serv = ["#2e7d32", "#388e3c", "#43a047", "#4caf50", "#66bb6a", "#81c784", "#a5d6a7", "#c8e6c9"]
 
 for i in range(num_filas):
     cols_kpi = st.columns(num_cols)
@@ -107,13 +118,13 @@ for i in range(num_filas):
             fact = row[s]
             vithas = fact*servicios[s]["VITHAS"]
             osa = fact*servicios[s]["OSA"]
-            if row["Nivel"]=="Especialista":
-                pct = 0.90 if row["Total_Bruto"]>promedios_nivel["Especialista"] else 0.85
-            else:
-                pct = 0.92 if row["Total_Bruto"]>promedios_nivel["Consultor"] else 0.88
+            pct = 0.90 if (nivel_medico=="Especialista" and row["Total_Bruto"]>promedios_nivel["Especialista"]) else \
+                  0.85 if nivel_medico=="Especialista" else \
+                  0.92 if (nivel_medico=="Consultor" and row["Total_Bruto"]>promedios_nivel["Consultor"]) else 0.88
             abon = osa * pct
+            color = colores_serv[idx%len(colores_serv)]
             cols_kpi[j].markdown(f"""
-            <div style="background-color:#2e7d32; border-radius:10px; padding:15px; color:white; text-align:center;">
+            <div style="background-color:{color}; border-radius:10px; padding:15px; color:white; text-align:center;">
                 <h5>{s}</h5>
                 <p>Fact: {fact:,.2f} €</p>
                 <p>VITHAS: {vithas:,.2f} €</p>
@@ -121,7 +132,7 @@ for i in range(num_filas):
             </div>
             """, unsafe_allow_html=True)
 
-# Tarjetas resumen generales del médico
+# -------------------- Tarjetas resumen generales del médico --------------------
 osa_total = row["Total_OSA_Disponible"]
 osa_final = osa_total - row["Abonado_a_Medico"]
 porc_abonado = row["Abonado_a_Medico"]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
@@ -168,5 +179,7 @@ df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VI
                         var_name="Concepto", value_name="Valor (€)")
 
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
-             title=f"Comparación de abonos de médicos del nivel {nivel_sel}")
+             title=f"Comparación de abonos de médicos del nivel {nivel_sel}", text="Valor (€)")
+fig.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
+
