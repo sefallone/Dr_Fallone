@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from io import BytesIO
 
-st.set_page_config(page_title="Sistema de Distribución VITHAS-OSA", layout="wide", page_icon="💼")
+st.set_page_config(page_title="Distribución VITHAS-OSA", layout="wide", page_icon="💼")
 
 # 2c3e50
 
