@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 st.title("📊 Escalabilidad del Pago a Médicos")
@@ -105,42 +105,26 @@ for s in servicios.keys():
 
 df_detalle = pd.DataFrame(detalle_servicios)
 
-# Fila TOTAL numérica
+# Fila TOTAL
 totales = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].sum()
 fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# Fila % sobre Facturación total (excluida de AgGrid)
-fila_pct = {"Servicio":"% del Total"}
-for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
-    fila_pct[col] = totales[col]/totales["Facturación"]*100
-
-# -------------------- Preparar AgGrid excluyendo % fila --------------------
-df_aggrid = df_detalle[df_detalle['Servicio'] != '% del Total']
+# -------------------- Preparar AgGrid excluyendo filas no numéricas si las hubiera --------------------
+df_aggrid = df_detalle.copy()
 
 # -------------------- Configuración AgGrid --------------------
 gb = GridOptionsBuilder.from_dataframe(df_aggrid)
 gb.configure_default_column(editable=False, resizable=True)
 gb.configure_column("Servicio", pinned="left", width=150)
 
-# JsCode para barra de progreso
-barra_js = JsCode("""
-function(params) {
-    var value = parseFloat(params.value);
-    if(isNaN(value)) return params.value;
-    var max = params.colDef.maxValue;
-    if(!max) max = value;
-    var percent = Math.min(value / max * 100, 100);
-    return '<div style="background: linear-gradient(90deg, #82E0AA ' + percent + '%, transparent ' + percent + '%); width:100%; padding:2px;">' + value.toFixed(2) + '</div>';
-}
-""")
-
+# Colores simples de fondo según valor (sin JS)
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
-    gb.configure_column(col, cellRenderer=barra_js, maxValue=df_aggrid[col].max())
+    gb.configure_column(col, cellStyle=lambda params: {'backgroundColor':'#D6EAF8' if params.value > 0 else '#FADBD8'})
 
 gridOptions = gb.build()
-AgGrid(df_aggrid, gridOptions=gridOptions, fit_columns_on_grid_load=True, height=400)
+AgGrid(df_aggrid, gridOptions=gridOptions, update_mode=GridUpdateMode.NO_UPDATE, fit_columns_on_grid_load=True, height=400)
 
 st.markdown(f"**Resumen:** {medico_sel} facturó {row['Total_Bruto']:.2f} €, se abonará {row['Abonado_a_Medico']:.2f} € según su nivel ({row['Nivel']}).")
 
@@ -164,4 +148,5 @@ st.markdown("""
 - La tabla muestra detalle por servicio y fila TOTAL.
 - El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
+
 
