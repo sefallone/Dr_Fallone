@@ -8,8 +8,8 @@ st.title("📊 Escalabilidad del Pago a Médicos")
 
 # -------------------- Definición de niveles y servicios --------------------
 niveles = {
-    "Especialista": ["Pons", "Sugrañes", "Mayo", "ME3", "ME4", "ME5", "ME6"],
-    "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Barro", "Esteban", "MC4", "MC5", "MC6"]
+    "Especialista": ["ME1", "ME2", "ME3", "ME4", "ME5", "ME6"],
+    "Consultor": ["MC1", "MC2", "MC3", "MC4", "MC5", "MC6"]
 }
 
 servicios = {
@@ -252,7 +252,7 @@ fig_comparativa = px.bar(df_comparativa, x='Escenario', y='Ingresos (€)',
                          text_auto='.2s',
                          title=f"Comparativa de Potencial - Dr. {medico_sel}")
 
-fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='outside')
+fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='inside')
 fig_comparativa.update_layout(showlegend=False)
 st.plotly_chart(fig_comparativa, use_container_width=True)
 # -------------------- Facturación por servicio --------------------
