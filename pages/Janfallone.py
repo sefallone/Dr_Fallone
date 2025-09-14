@@ -117,8 +117,6 @@ st.markdown('<div class="section-header">📋 Ingreso de Datos de Facturación</
 st.info("Introduzca los importes de facturación para cada médico y servicio. Los cálculos se actualizarán automáticamente.")
 
 df_edit = st.data_editor(df_base, num_rows="fixed", use_container_width=True, height=400)
-st.session_state["df_edit"] = df_edit
-st.session_state["servicios"] = servicios
 
 # Asegurarnos de que las columnas de servicios sean numéricas
 for s in servicios.keys():
