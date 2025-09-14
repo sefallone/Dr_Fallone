@@ -114,17 +114,20 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# Fila % sobre Facturación total
+# Fila % sobre Facturación total (formato correcto: %)
 fila_pct = {"Servicio":"% del Total"}
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
     fila_pct[col] = totales[col]/totales["Facturación"]*100
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_pct])], ignore_index=True)
 
-# -------------------- Colores para destacar deducciones y abonos --------------------
-def color_fila(val):
+# -------------------- Estilo avanzado con gradientes y barras --------------------
+def barra_gradiente(val, max_val):
     if isinstance(val, str):
         return ""
-    return "background-color: #D5F5E3; color: black"  # verde claro con texto negro
+    width = int((val/max_val)*100) if max_val>0 else 0
+    return f"background: linear-gradient(90deg, #82E0AA {width}%, transparent {width}%); color: black"
+
+maximos = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].max()
 
 st.dataframe(
     df_detalle.style.format({
@@ -132,7 +135,7 @@ st.dataframe(
         "VITHAS":"{:,.2f} €",
         "OSA":"{:,.2f} €",
         "Abonado al Médico":"{:,.2f} €"
-    }).applymap(color_fila, subset=["Facturación","VITHAS","OSA","Abonado al Médico"]),
+    }).apply(lambda x: [barra_gradiente(v,maximos[x.name]) if isinstance(v,(int,float)) else "" for v in x], axis=1),
     use_container_width=True
 )
 
@@ -159,4 +162,5 @@ st.markdown("""
 - La tabla muestra detalle por servicio, fila TOTAL y fila % sobre facturación total.
 - El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
+
 
