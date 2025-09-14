@@ -95,14 +95,17 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# -------------------- Mostrar tabla con gradientes por columna --------------------
+# Columnas numéricas
+num_cols = ["Facturación","VITHAS","OSA","Abonado al Médico"]
+
+# Mostrar tabla con gradientes solo en columnas numéricas
 st.dataframe(
     df_detalle.style
         .background_gradient(subset=["Facturación"], cmap="Blues")
         .background_gradient(subset=["VITHAS"], cmap="PuBu")
         .background_gradient(subset=["OSA"], cmap="Greens")
         .background_gradient(subset=["Abonado al Médico"], cmap="Oranges")
-        .format("{:,.2f} €"),
+        .format({col: "{:,.2f} €" for col in num_cols}),
     use_container_width=True,
     height=400
 )
@@ -128,5 +131,4 @@ st.markdown("""
 - Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
 - La tabla y gráficos permiten comparar visualmente el impacto de cada servicio y nivel.
 """)
-
 
