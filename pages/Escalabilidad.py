@@ -113,7 +113,7 @@ fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
 st.markdown("#### Detalle por Servicio")
-st.dataframe(df_detalle.style.format("{:,.2f}"), use_container_width=True, height=300)
+st.dataframe(df_detalle.round(2), use_container_width=True, height=300)
 
 # -------------------- NOTA REPORTE tipo tarjeta --------------------
 total_osa = sum([row[s]*servicios[s]["OSA"] for s in servicios])
