@@ -114,20 +114,26 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# Fila % sobre Facturación total (formato correcto: %)
+# Fila % sobre Facturación total (formato correcto)
 fila_pct = {"Servicio":"% del Total"}
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
     fila_pct[col] = totales[col]/totales["Facturación"]*100
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_pct])], ignore_index=True)
 
-# -------------------- Estilo avanzado con gradientes y barras --------------------
-def barra_gradiente(val, max_val):
-    if isinstance(val, str):
-        return ""
-    width = int((val/max_val)*100) if max_val>0 else 0
-    return f"background: linear-gradient(90deg, #82E0AA {width}%, transparent {width}%); color: black"
-
+# -------------------- Gradientes avanzados por columna --------------------
 maximos = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].max()
+
+def barra_gradiente_fila(fila):
+    res = []
+    for col in fila.index:
+        val = fila[col]
+        if isinstance(val,(int,float)):
+            max_val = maximos[col] if col in maximos else 0
+            width = int((val/max_val)*100) if max_val>0 else 0
+            res.append(f"background: linear-gradient(90deg, #82E0AA {width}%, transparent {width}%); color: black")
+        else:
+            res.append("")
+    return res
 
 st.dataframe(
     df_detalle.style.format({
@@ -135,7 +141,7 @@ st.dataframe(
         "VITHAS":"{:,.2f} €",
         "OSA":"{:,.2f} €",
         "Abonado al Médico":"{:,.2f} €"
-    }).apply(lambda x: [barra_gradiente(v,maximos[x.name]) if isinstance(v,(int,float)) else "" for v in x], axis=1),
+    }).apply(barra_gradiente_fila, axis=1),
     use_container_width=True
 )
 
