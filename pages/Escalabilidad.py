@@ -127,7 +127,8 @@ osa_final_actual = row["Total_OSA_Disponible"] - abono_actual
 osa_final_potencial = row["Total_OSA_Disponible"] - abono_potencial
 
 # -------------------- Nuevo diseño de KPIs para el médico --------------------
-st.markdown("### 📝 Reporte de Rendimiento del Médico")
+# Título con nombre del médico
+st.markdown(f"### 📝 Reporte de Rendimiento del Médico - <span style='font-size:1.3em; color:#2e7d32;'>Dr. {medico_sel}</span>", unsafe_allow_html=True)
 
 # Primera fila de KPIs principales
 kpi_cols1 = st.columns(4)
@@ -161,7 +162,98 @@ kpi_cols1[3].markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Segunda fila de KPIs de potencial
+# -------------------- NUEVA SECCIÓN: KPIs POR SERVICIO --------------------
+st.markdown("---")
+st.subheader("🧮 Desglose por Servicio")
+
+# Calcular abono por servicio
+servicios_con_facturacion = {}
+for servicio in servicios.keys():
+    if row[servicio] > 0:
+        facturado = row[servicio]
+        osa_disponible = facturado * servicios[servicio]["OSA"]
+        abono_servicio = osa_disponible * (pct_potencial if row["Total_Bruto"] > promedio_nivel else pct_actual)
+        servicios_con_facturacion[servicio] = {
+            'facturado': facturado,
+            'abonado': abono_servicio,
+            'porcentaje_abono': (abono_servicio / facturado * 100) if facturado > 0 else 0
+        }
+
+# Mostrar KPIs por servicio
+if servicios_con_facturacion:
+    num_cols = 3  # 3 columnas para mejor visualización
+    num_filas = math.ceil(len(servicios_con_facturacion) / num_cols)
+    
+    colores_servicios = ["#2e7d32", "#388e3c", "#43a047", "#4caf50", "#66bb6a", "#81c784", "#a5d6a7", "#c8e6c9"]
+    
+    for i in range(num_filas):
+        cols_servicio = st.columns(num_cols)
+        for j in range(num_cols):
+            idx = i * num_cols + j
+            if idx < len(servicios_con_facturacion):
+                servicio = list(servicios_con_facturacion.keys())[idx]
+                datos = servicios_con_facturacion[servicio]
+                color_idx = idx % len(colores_servicios)
+                
+                cols_servicio[j].markdown(f"""
+                <div style="background-color: {colores_servicios[color_idx]}; border-radius: 10px; padding: 15px; color: white; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h5 style="margin: 0 0 10px 0; font-size: 1rem; font-weight: bold;">{servicio}</h5>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 0.85rem;">Facturado:</span>
+                        <span style="font-size: 0.85rem; font-weight: bold;">{datos['facturado']:,.2f} €</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 0.85rem;">Abonado:</span>
+                        <span style="font-size: 0.85rem; font-weight: bold;">{datos['abonado']:,.2f} €</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 0.85rem;">% Abono:</span>
+                        <span style="font-size: 0.85rem; font-weight: bold;">{datos['porcentaje_abono']:.1f}%</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+# Servicios sin facturación
+servicios_sin_facturacion = [s for s in servicios.keys() if row[s] == 0]
+if servicios_sin_facturacion:
+    st.info(f"**Servicios sin facturación:** {', '.join(servicios_sin_facturacion)}")
+
+# -------------------- RESUMEN TOTAL POR SERVICIOS --------------------
+st.markdown("---")
+st.subheader("📊 Resumen de Rendimiento por Servicios")
+
+# Crear DataFrame para el resumen
+resumen_data = []
+for servicio, datos in servicios_con_facturacion.items():
+    resumen_data.append({
+        'Servicio': servicio,
+        'Facturado (€)': datos['facturado'],
+        'Abonado (€)': datos['abonado'],
+        '% Abono': datos['porcentaje_abono']
+    })
+
+if resumen_data:
+    df_resumen = pd.DataFrame(resumen_data)
+    
+    # Formatear números para mejor visualización
+    df_resumen_display = df_resumen.copy()
+    df_resumen_display['Facturado (€)'] = df_resumen_display['Facturado (€)'].apply(lambda x: f"{x:,.2f} €")
+    df_resumen_display['Abonado (€)'] = df_resumen_display['Abonado (€)'].apply(lambda x: f"{x:,.2f} €")
+    df_resumen_display['% Abono'] = df_resumen_display['% Abono'].apply(lambda x: f"{x:.1f}%")
+    
+    # Mostrar tabla de resumen
+    st.dataframe(df_resumen_display, use_container_width=True, hide_index=True)
+    
+    # Gráfico de rendimiento por servicio
+    fig_servicios = px.bar(df_resumen, x='Servicio', y='Facturado (€)', 
+                          title=f"Facturación por Servicio - Dr. {medico_sel}",
+                          text='Facturado (€)',
+                          color='Servicio')
+    fig_servicios.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
+    fig_servicios.update_layout(showlegend=False, xaxis_tickangle=-45)
+    st.plotly_chart(fig_servicios, use_container_width=True)
+
+# Segunda fila de KPIs de potencial (la que ya tenías)
 st.markdown("---")
 st.subheader("📈 Potencial de Ingresos")
 
