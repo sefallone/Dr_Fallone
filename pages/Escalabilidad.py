@@ -9,7 +9,7 @@ st.markdown("""
             padding: 20px; 
             border-radius: 15px; 
             text-align: center; 
-            color: yellow;
+            color: orange;
             margin-bottom: 20px;">
     <h1 style="margin: 0; font-size: 2.5rem;"> ORTHOPAEDIC SPECIALIST ALLIANCE </h1>
     <p style="margin: 5px 0 0 0; font-size: 1.2rem;">📊 Sistema de Escalabilidad de Pagos a Médicos</p>
