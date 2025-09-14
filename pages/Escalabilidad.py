@@ -7,14 +7,14 @@ st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 
 # Header con diseño mejorado
 st.markdown("""
-<div style="background: linear-gradient(135deg, #1b5e20, #2e7d32, #388e3c); 
+<div style="background: linear-gradient(135deg, #023004, #023004, #388e3c); 
             padding: 25px; 
             border-radius: 15px; 
             text-align: center; 
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 25px;">
-    <h1 style="margin: 0; font-size: 2.8rem;">🦴 ORTHOPAEDIC SPECIALIST ALLIANCE ⚕️</h1>
+    <h1 style="margin: 0; font-size: 2.8rem;"> ORTHOPAEDIC SPECIALIST ALLIANCE ⚕</h1>
     <p style="margin: 10px 0 0 0; font-size: 1.3rem;">📊 Sistema de Escalabilidad de Pagos 💰</p>
 </div>
 """, unsafe_allow_html=True)
@@ -27,10 +27,10 @@ niveles = {
 
 servicios = {
     "Consultas": {"VITHAS": 0.30, "OSA": 0.70},
-    "Quirúrgicas": {"VITHAS": 0.10, "OSA": 0.90},
+    "Cirugías": {"VITHAS": 0.10, "OSA": 0.90},
     "Urgencias": {"VITHAS": 0.50, "OSA": 0.50},
     "Ecografías": {"VITHAS": 0.60, "OSA": 0.40},
-    "Prótesis y MQX": {"VITHAS": 0.00, "OSA": 1.00},
+    "MQX": {"VITHAS": 0.00, "OSA": 1.00},
     "Pacientes INTL": {"VITHAS": 0.40, "OSA": 0.60},
     "Rehabilitación": {"VITHAS": 0.40, "OSA": 0.60},
     "Podología": {"VITHAS": 0.30, "OSA": 0.70}
@@ -289,7 +289,7 @@ fig_comparativa = px.bar(df_comparativa, x='Escenario', y='Ingresos (€)',
                          text_auto='.2s',
                          title=f"Comparativa de Potencial - Dr. {medico_sel}")
 
-fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='outside')
+fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='inside')
 fig_comparativa.update_layout(showlegend=False)
 st.plotly_chart(fig_comparativa, use_container_width=True)
 
@@ -394,5 +394,5 @@ df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VI
 
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}", text="Valor (€)")
-fig.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
+fig.update_traces(texttemplate='%{text:,.0f} €', textposition='inside')
 st.plotly_chart(fig, use_container_width=True)
