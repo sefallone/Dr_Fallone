@@ -9,14 +9,14 @@ st.markdown("""
 El sistema de pago funciona en **tres pasos**:
 
 1. Cada médico genera una **facturación bruta total** por servicio.
-2. Esa facturación se reparte entre **VITHAS** y **OSA**, según porcentajes acordados en negociación (Aún se están negociando algunos servicios).
-3. Del pool OSA (Todo lo que entra a OSA), se calcula cuánto se le **abona al médico** según su nivel y comparación con el promedio de su grupo.
+2. Esa facturación se reparte entre **VITHAS** y **OSA**, según porcentajes.
+3. Del pool OSA, se calcula cuánto se le **abona al médico** según su nivel y comparación con el promedio de su grupo.
 """)
 
 # -------------------- Definición de médicos y servicios --------------------
 niveles = {
-    "Especialista": ["ME1", "ME2", "ME3", "ME4", "ME5"],
-    "Consultor": ["MC1", "MC2", "MC3", "MC4", "MC5"]
+    "Especialista": ["Pons", "Sugrañes", "Mayo", "ME3", "ME4", "ME5", "ME6"],
+    "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Barro", "Esteban", "MC4", "MC5", "MC6"]
 }
 
 servicios = {
@@ -24,7 +24,7 @@ servicios = {
     "Quirúrgicas": {"VITHAS": 0.10, "OSA": 0.90},
     "Urgencias": {"VITHAS": 0.50, "OSA": 0.50},
     "Ecografías": {"VITHAS": 0.60, "OSA": 0.40},
-    "MQX": {"VITHAS": 0.00, "OSA": 1.00},
+    "Prótesis y MQX": {"VITHAS": 0.00, "OSA": 1.00},
     "Pacientes INTL": {"VITHAS": 0.40, "OSA": 0.60},
     "Rehabilitación": {"VITHAS": 0.40, "OSA": 0.60},
     "Podología": {"VITHAS": 0.30, "OSA": 0.70}
@@ -46,10 +46,9 @@ for medico, nivel in medicos:
     rows.append(fila)
 
 df_edit = pd.DataFrame(rows, columns=cols)
-
 df_edit = st.data_editor(df_edit, num_rows="fixed", use_container_width=True, height=400)
 
-# Asegurarnos de que las columnas de servicios sean numéricas
+# Asegurar que columnas de servicios sean numéricas
 for s in servicios.keys():
     df_edit[s] = pd.to_numeric(df_edit[s], errors='coerce').fillna(0.0)
 
@@ -77,8 +76,8 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- Tabla detalle por servicio de un médico --------------------
-st.markdown("### 👨‍⚕️ Detalle por servicio")
+# -------------------- Tabla detalle por servicio --------------------
+st.markdown("### 👨‍⚕️ Detalle por servicio de un médico")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
@@ -100,24 +99,37 @@ for s in servicios.keys():
     })
 
 df_detalle = pd.DataFrame(detalle_servicios)
-df_detalle.loc["TOTAL"] = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].sum()
-df_detalle.loc["TOTAL","Servicio"] = "TOTAL"
 
-# Agregar columnas de porcentaje respecto al total
-totales = df_detalle.loc["TOTAL", ["Facturación","VITHAS","OSA","Abonado al Médico"]]
+# Fila TOTAL numérica
+totales = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].sum()
+fila_total = {"Servicio":"TOTAL"}
+fila_total.update(totales)
+df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
+
+# Fila % sobre Facturación total
+fila_pct = {"Servicio":"% del Total"}
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
-    df_detalle[f"% {col}"] = df_detalle[col]/totales[col]*100
+    fila_pct[col] = totales[col]/totales["Facturación"]*100
+df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_pct])], ignore_index=True)
 
-st.dataframe(df_detalle.style.format({
-    "Facturación":"{:,.2f} €",
-    "VITHAS":"{:,.2f} €",
-    "OSA":"{:,.2f} €",
-    "Abonado al Médico":"{:,.2f} €",
-    "% Facturación":"{:.1f}%",
-    "% VITHAS":"{:.1f}%",
-    "% OSA":"{:.1f}%",
-    "% Abonado al Médico":"{:.1f}%"
-}), use_container_width=True)
+# -------------------- Colores para destacar deducciones y abonos --------------------
+def color_fila(val):
+    if isinstance(val, str):
+        return ""
+    if val >= 0:
+        return "background-color: #D5F5E3"  # verde claro
+    else:
+        return ""
+
+st.dataframe(
+    df_detalle.style.format({
+        "Facturación":"{:,.2f} €",
+        "VITHAS":"{:,.2f} €",
+        "OSA":"{:,.2f} €",
+        "Abonado al Médico":"{:,.2f} €"
+    }).applymap(color_fila, subset=["Facturación","VITHAS","OSA","Abonado al Médico"]),
+    use_container_width=True
+)
 
 st.markdown(f"**Resumen:** {medico_sel} facturó {row['Total_Bruto']:.2f} €, se abonará {row['Abonado_a_Medico']:.2f} € según su nivel ({row['Nivel']}).")
 
@@ -139,7 +151,6 @@ st.markdown("""
 - Se parte de la **facturación total por servicio**.
 - Se aplica la distribución **VITHAS/OSA**.
 - Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
-- La tabla muestra detalle por servicio y porcentaje sobre el total.
+- La tabla muestra detalle por servicio, fila TOTAL y fila % sobre facturación total.
 - El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
-
