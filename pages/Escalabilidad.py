@@ -5,7 +5,7 @@ import plotly.express as px
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 st.title("📊 Escalabilidad del Pago a Médicos")
 
-# -------------------- Definición de médicos y servicios --------------------
+# -------------------- Definición de niveles y servicios --------------------
 niveles = {
     "Especialista": ["Pons", "Sugrañes", "Mayo", "ME3", "ME4", "ME5", "ME6"],
     "Consultor": ["Fallone", "Puigdellívol", "Aguilar", "Casaccia", "De Retana", "Ortega", "Barro", "Esteban", "MC4", "MC5", "MC6"]
@@ -22,7 +22,7 @@ servicios = {
     "Podología": {"VITHAS": 0.30, "OSA": 0.70}
 }
 
-# -------------------- Entrada de datos --------------------
+# -------------------- Crear DataFrame base --------------------
 medicos = []
 for nivel, lista in niveles.items():
     medicos.extend([(m, nivel) for m in lista])
@@ -36,9 +36,11 @@ for medico, nivel in medicos:
     rows.append(fila)
 
 df_edit = pd.DataFrame(rows, columns=cols)
+
+# -------------------- Entrada de montos interactiva --------------------
+st.markdown("### 📋 Ingreso de Montos de Facturación")
 df_edit = st.data_editor(df_edit, num_rows="fixed", use_container_width=True, height=400)
 
-# -------------------- Asegurar columnas numéricas --------------------
 for s in servicios.keys():
     df_edit[s] = pd.to_numeric(df_edit[s], errors='coerce').fillna(0.0)
 
@@ -49,7 +51,6 @@ df_edit["Total_VITHAS"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["VIT
 
 promedios_nivel = df_edit.groupby("Nivel")["Total_Bruto"].mean().to_dict()
 
-# -------------------- Abono final según promedio --------------------
 def calcular_abono(row):
     nivel = row["Nivel"]
     total_bruto = row["Total_Bruto"]
@@ -64,11 +65,30 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- Tabla interactiva por médico --------------------
-st.markdown("### 👨‍⚕️ Detalle por servicio de un médico")
+# -------------------- KPI tipo tarjeta --------------------
+st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
+c1, c2 = st.columns(2)
+
+c1.markdown(f"""
+<div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 20px; border-radius: 15px; text-align: center; color: white;">
+    <h4>Promedio Especialistas</h4>
+    <h2>{promedios_nivel.get('Especialista',0):,.2f} €</h2>
+</div>
+""", unsafe_allow_html=True)
+
+c2.markdown(f"""
+<div style="background: linear-gradient(135deg, #27ae60, #2ecc71); padding: 20px; border-radius: 15px; text-align: center; color: white;">
+    <h4>Promedio Consultores</h4>
+    <h2>{promedios_nivel.get('Consultor',0):,.2f} €</h2>
+</div>
+""", unsafe_allow_html=True)
+
+# -------------------- Selección de médico --------------------
+st.markdown("### 👨‍⚕️ Detalle y Reporte del Médico")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
+# -------------------- Tabla de detalle por servicio --------------------
 detalle_servicios = []
 for s in servicios.keys():
     fact = row[s]
@@ -87,70 +107,40 @@ for s in servicios.keys():
     })
 
 df_detalle = pd.DataFrame(detalle_servicios)
-
-# Fila TOTAL
 totales = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].sum()
 fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# Fila % respecto al total bruto
-porcentajes = {"Servicio":"% del Total"}
-for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
-    porcentajes[col] = totales[col]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
-df_detalle = pd.concat([df_detalle, pd.DataFrame([porcentajes])], ignore_index=True)
+st.markdown("#### Detalle por Servicio")
+st.dataframe(df_detalle.style.format("{:,.2f}"), use_container_width=True, height=300)
 
-# Columnas numéricas
-num_cols = ["Facturación","VITHAS","OSA","Abonado al Médico"]
-
-# Mostrar tabla
-st.dataframe(
-    df_detalle.style
-        .background_gradient(subset=["Facturación"], cmap="Blues")
-        .background_gradient(subset=["VITHAS"], cmap="PuBu")
-        .background_gradient(subset=["OSA"], cmap="Greens")
-        .background_gradient(subset=["Abonado al Médico"], cmap="Oranges")
-        .format({col: "{:,.2f} €" for col in num_cols})
-        .format({"Facturación": "{:,.2f} €", "VITHAS": "{:,.2f} €", "OSA": "{:,.2f} €", "Abonado al Médico": "{:,.2f} €"}),
-    use_container_width=True,
-    height=400
-)
-
-# -------------------- KPI de promedios más bonitos --------------------
-st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
-c1, c2 = st.columns(2)
-with c1:
-    st.metric(label="Promedio Especialistas", value=f"{promedios_nivel.get('Especialista',0):,.2f} €",
-              delta=f"{(promedios_nivel.get('Especialista',0)/row['Total_Bruto']*100 if row['Total_Bruto']>0 else 0):.1f}%")
-with c2:
-    st.metric(label="Promedio Consultores", value=f"{promedios_nivel.get('Consultor',0):,.2f} €",
-              delta=f"{(promedios_nivel.get('Consultor',0)/row['Total_Bruto']*100 if row['Total_Bruto']>0 else 0):.1f}%")
-
-# -------------------- NOTA REPORTE para el médico --------------------
-st.markdown(f"### 📝 Reporte para {medico_sel}")
-
-# Saldo OSA final
+# -------------------- NOTA REPORTE tipo tarjeta --------------------
 total_osa = sum([row[s]*servicios[s]["OSA"] for s in servicios])
 osa_final = total_osa - row["Abonado_a_Medico"]
 porc_abonado = row["Abonado_a_Medico"]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
 
-# Construir nota
-nota = f"""
-**Facturación Total:** {row['Total_Bruto']:.2f} €  
-**Desglose por servicio:**  
-"""
+st.markdown(f"""
+<div style="border-radius:15px; padding:20px; background-color:#f5f5f5; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
+<h3>📝 Reporte para {medico_sel}</h3>
+<p><strong>Facturación Total:</strong> {row['Total_Bruto']:.2f} €</p>
+<p><strong>Desglose por servicio:</strong></p>
+<ul>
+""", unsafe_allow_html=True)
+
 for s in servicios.keys():
-    nota += f"- {s}: {row[s]:,.2f} €\n"
-nota += f"""
-**VITHAS:** {row['Total_VITHAS']:.2f} €  
-**Abonado a cuenta de {medico_sel}:** {row['Abonado_a_Medico']:.2f} €  
-**OSA Final disponible:** {osa_final:.2f} €  
-**Porcentaje de facturación recibido:** {porc_abonado:.1f}%
-"""
+    st.markdown(f"<li>{s}: {row[s]:,.2f} €</li>", unsafe_allow_html=True)
 
-st.markdown(nota)
+st.markdown(f"""
+</ul>
+<p><strong>VITHAS:</strong> {row['Total_VITHAS']:.2f} €</p>
+<p><strong>Abonado a {medico_sel}:</strong> {row['Abonado_a_Medico']:.2f} €</p>
+<p><strong>OSA Final disponible:</strong> {osa_final:.2f} €</p>
+<p><strong>% de facturación recibido:</strong> {porc_abonado:.1f}%</p>
+</div>
+""", unsafe_allow_html=True)
 
-# -------------------- Gráfico comparativo por nivel --------------------
+# -------------------- Gráfico comparativo por nivel jerárquico --------------------
 st.markdown("### 📊 Comparación de abonos por nivel jerárquico")
 nivel_sel = st.selectbox("Seleccione nivel jerárquico para gráfico", list(niveles.keys()))
 df_nivel = df_edit[df_edit["Nivel"]==nivel_sel].copy()
