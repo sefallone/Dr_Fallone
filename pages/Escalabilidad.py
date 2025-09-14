@@ -357,7 +357,7 @@ if resumen_data:
                           title=f"Facturación por Servicio - Dr. {medico_sel}",
                           text='Facturado (€)',
                           color='Servicio')
-    fig_servicios.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
+    fig_servicios.update_traces(texttemplate='%{text:,.0f} €', textposition='inside')
     fig_servicios.update_layout(showlegend=False, xaxis_tickangle=-45)
     st.plotly_chart(fig_servicios, use_container_width=True)
 
@@ -371,5 +371,5 @@ df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VI
 
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}", text="Valor (€)")
-fig.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
+fig.update_traces(texttemplate='%{text:,.0f} €', textposition='inside')
 st.plotly_chart(fig, use_container_width=True)
