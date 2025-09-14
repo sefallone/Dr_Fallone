@@ -4,4 +4,4 @@ matplotlib
 plotly
 openpyxl
 xlsxWriter
-st_aggrid
+streamlit-aggrid
