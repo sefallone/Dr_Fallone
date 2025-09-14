@@ -10,7 +10,7 @@ El sistema de pago funciona en **tres pasos**:
 
 1. Cada médico genera una **facturación bruta total** por servicio.
 2. Esa facturación se reparte entre **VITHAS** y **OSA**, según porcentajes.
-3. Del pool OSA, se calcula cuánto se le **abona al médico** según su nivel.
+3. Del pool OSA, se calcula cuánto se le **abona al médico** según su nivel y comparación con el promedio de su grupo.
 """)
 
 # -------------------- Definición de médicos y servicios --------------------
@@ -55,21 +55,29 @@ for s in servicios.keys():
 
 # -------------------- Cálculos --------------------
 df_edit["Total_Bruto"] = df_edit[list(servicios.keys())].sum(axis=1)
+df_edit["Total_OSA_Disponible"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["OSA"] for s in servicios), axis=1)
+df_edit["Total_VITHAS"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["VITHAS"] for s in servicios), axis=1)
 
-# Totales VITHAS y OSA por médico
-osa_por_medico = []
-abonado = []
-for _, row in df_edit.iterrows():
-    total_osa_med = sum(row[s]*servicios[s]["OSA"] for s in servicios)
-    osa_por_medico.append(total_osa_med)
-    # regla simple de ejemplo
-    pct = 0.9 if row["Nivel"]=="Especialista" else 0.88
-    abonado.append(total_osa_med*pct)
+# Calcular promedio por nivel
+promedios_nivel = df_edit.groupby("Nivel")["Total_Bruto"].mean().to_dict()
 
-df_edit["Total_OSA_Disponible"] = osa_por_medico
-df_edit["Abonado_a_Medico"] = abonado
+# Calcular abono final según reglas de promedio
+def calcular_abono(row):
+    nivel = row["Nivel"]
+    total_bruto = row["Total_Bruto"]
+    total_osa = row["Total_OSA_Disponible"]
+    
+    if nivel == "Especialista":
+        pct = 0.90 if total_bruto > promedios_nivel[nivel] else 0.85
+    elif nivel == "Consultor":
+        pct = 0.92 if total_bruto > promedios_nivel[nivel] else 0.88
+    else:
+        pct = 0.0
+    return total_osa * pct
 
-# -------------------- Selección para detalle --------------------
+df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
+
+# -------------------- Tabla detalle por servicio de un médico --------------------
 st.markdown("### 👨‍⚕️ Detalle por servicio")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
@@ -79,7 +87,10 @@ for s in servicios.keys():
     fact = row[s]
     vithas = fact * servicios[s]["VITHAS"]
     osa = fact * servicios[s]["OSA"]
-    abon = osa * (0.9 if row["Nivel"]=="Especialista" else 0.88)
+    abon = osa * (0.90 if row["Nivel"]=="Especialista" and row["Total_Bruto"]>promedios_nivel["Especialista"]
+                  else 0.85 if row["Nivel"]=="Especialista"
+                  else 0.92 if row["Nivel"]=="Consultor" and row["Total_Bruto"]>promedios_nivel["Consultor"]
+                  else 0.88)
     detalle_servicios.append({
         "Servicio": s,
         "Facturación": fact,
@@ -92,11 +103,20 @@ df_detalle = pd.DataFrame(detalle_servicios)
 df_detalle.loc["TOTAL"] = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].sum()
 df_detalle.loc["TOTAL","Servicio"] = "TOTAL"
 
+# Agregar columnas de porcentaje respecto al total
+totales = df_detalle.loc["TOTAL", ["Facturación","VITHAS","OSA","Abonado al Médico"]]
+for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
+    df_detalle[f"% {col}"] = df_detalle[col]/totales[col]*100
+
 st.dataframe(df_detalle.style.format({
     "Facturación":"{:,.2f} €",
     "VITHAS":"{:,.2f} €",
     "OSA":"{:,.2f} €",
-    "Abonado al Médico":"{:,.2f} €"
+    "Abonado al Médico":"{:,.2f} €",
+    "% Facturación":"{:.1f}%",
+    "% VITHAS":"{:.1f}%",
+    "% OSA":"{:.1f}%",
+    "% Abonado al Médico":"{:.1f}%"
 }), use_container_width=True)
 
 st.markdown(f"**Resumen:** {medico_sel} facturó {row['Total_Bruto']:.2f} €, se abonará {row['Abonado_a_Medico']:.2f} € según su nivel ({row['Nivel']}).")
@@ -106,17 +126,20 @@ st.markdown("### 📊 Comparación de abonos por nivel jerárquico")
 nivel_sel = st.selectbox("Seleccione nivel jerárquico", list(niveles.keys()))
 df_nivel = df_edit[df_edit["Nivel"]==nivel_sel].copy()
 
-df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_OSA_Disponible","Abonado_a_Medico"],
+df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VITHAS","Total_OSA_Disponible","Abonado_a_Medico"],
                         var_name="Concepto", value_name="Valor (€)")
 
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}")
 st.plotly_chart(fig, use_container_width=True)
 
+# -------------------- Explicación final --------------------
 st.markdown("""
-### 🔹 Conclusión
-- Se parte de la facturación total por servicio.
-- Se aplica la distribución VITHAS/OSA.
-- Del pool OSA se calcula el abono final al médico.
-- Tabla y gráfico permiten ver claramente la deducción y lo que finalmente cobra cada médico.
+### 🔹 Conclusión del proceso
+- Se parte de la **facturación total por servicio**.
+- Se aplica la distribución **VITHAS/OSA**.
+- Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
+- La tabla muestra detalle por servicio y porcentaje sobre el total.
+- El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
+
