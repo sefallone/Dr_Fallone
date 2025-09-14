@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 st.title("📊 Escalabilidad del Pago a Médicos")
@@ -88,7 +89,7 @@ st.markdown("### 👨‍⚕️ Detalle y Reporte del Médico")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
-# -------------------- Tabla de detalle por servicio --------------------
+# -------------------- Tabla de detalle por servicio usando AgGrid --------------------
 detalle_servicios = []
 for s in servicios.keys():
     fact = row[s]
@@ -113,29 +114,29 @@ fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
 st.markdown("#### Detalle por Servicio")
-st.dataframe(df_detalle.round(2), use_container_width=True, height=300)
+gb = GridOptionsBuilder.from_dataframe(df_detalle)
+gb.configure_default_column(type=["numericColumn","numberColumnFilter"], precision=2)
+gridOptions = gb.build()
+AgGrid(df_detalle, gridOptions=gridOptions, fit_columns_on_grid_load=True, height=300)
 
-# -------------------- NOTA REPORTE tipo tarjeta --------------------
+# -------------------- Tarjeta de reporte del médico --------------------
 total_osa = sum([row[s]*servicios[s]["OSA"] for s in servicios])
 osa_final = total_osa - row["Abonado_a_Medico"]
 porc_abonado = row["Abonado_a_Medico"]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
 
+servicios_desglose = "".join([f"<li>{s}: {row[s]:,.2f} €</li>" for s in servicios.keys()])
+
 st.markdown(f"""
-<div style="border-radius:15px; padding:20px; background-color:#f5f5f5; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
+<div style="background-color:#196f3d; border-radius:15px; padding:20px; color:white; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);">
 <h3>📝 Reporte para {medico_sel}</h3>
-<p><strong>Facturación Total:</strong> {row['Total_Bruto']:.2f} €</p>
+<p><strong>Facturación Total:</strong> {row['Total_Bruto']:,.2f} €</p>
 <p><strong>Desglose por servicio:</strong></p>
 <ul>
-""", unsafe_allow_html=True)
-
-for s in servicios.keys():
-    st.markdown(f"<li>{s}: {row[s]:,.2f} €</li>", unsafe_allow_html=True)
-
-st.markdown(f"""
+{servicios_desglose}
 </ul>
-<p><strong>VITHAS:</strong> {row['Total_VITHAS']:.2f} €</p>
-<p><strong>Abonado a {medico_sel}:</strong> {row['Abonado_a_Medico']:.2f} €</p>
-<p><strong>OSA Final disponible:</strong> {osa_final:.2f} €</p>
+<p><strong>VITHAS:</strong> {row['Total_VITHAS']:,.2f} €</p>
+<p><strong>Abonado a {medico_sel}:</strong> {row['Abonado_a_Medico']:,.2f} €</p>
+<p><strong>OSA Final disponible:</strong> {osa_final:,.2f} €</p>
 <p><strong>% de facturación recibido:</strong> {porc_abonado:.1f}%</p>
 </div>
 """, unsafe_allow_html=True)
@@ -150,12 +151,4 @@ df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VI
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}")
 st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("""
-### 🔹 Conclusión del proceso
-- Se parte de la **facturación total por servicio**, se aplica la distribución **VITHAS/OSA**.
-- Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
-- La tabla y gráficos permiten comparar visualmente el impacto de cada servicio y nivel.
-""")
-
 
