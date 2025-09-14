@@ -4,7 +4,7 @@ import plotly.express as px
 import math
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
-st.title("-----------ORTHOPAEDIC SPECIALIST ALLIANCE---------------- "
+st.title("-----------ORTHOPAEDIC SPECIALIST ALLIANCE---------------- ")
 st.title("📊 Escalabilidad del Pago a Médicos")
 
 # -------------------- Definición de niveles y servicios --------------------
