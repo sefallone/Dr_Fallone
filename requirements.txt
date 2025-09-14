@@ -4,6 +4,4 @@ matplotlib
 plotly
 openpyxl
 xlsxWriter
-AgGrid
-GridOptionsBuilder
-JsCode
+st_aggrid
