@@ -91,23 +91,31 @@ row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 # -------------------- Mensaje personalizado sobre el promedio --------------------
 nivel_medico = row["Nivel"]
 promedio_nivel = promedios_nivel[nivel_medico]
-if row["Total_Bruto"] > promedio_nivel:
-    mensaje = f"Doctor {medico_sel}, usted está por ARRIBA del promedio de facturación de su grupo."
-    color_mensaje = "success"
-else:
-    mensaje = f"Doctor {medico_sel}, usted está por ABAJO del promedio de facturación de su grupo."
-    color_mensaje = "warning"
 
-st.success(mensaje) if color_mensaje == "success" else st.warning(mensaje)
+# Usamos markdown en lugar de st.success/st.warning para evitar problemas con DeltaGenerator
+if row["Total_Bruto"] > promedio_nivel:
+    mensaje_html = f"""
+    <div style="background-color: #d4edda; color: #155724; padding: 12px; border-radius: 5px; border-left: 4px solid #28a745; margin: 10px 0;">
+        <strong>¡Excelente rendimiento!</strong> Doctor {medico_sel}, usted está por <strong>ARRIBA</strong> del promedio de facturación de su grupo.
+    </div>
+    """
+else:
+    mensaje_html = f"""
+    <div style="background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 10px 0;">
+        <strong>Atención:</strong> Doctor {medico_sel}, usted está por <strong>ABAJO</strong> del promedio de facturación de su grupo.
+    </div>
+    """
+
+st.markdown(mensaje_html, unsafe_allow_html=True)
 
 # -------------------- Cálculos para el potencial de ganancia --------------------
 # Determinar porcentajes actuales y potenciales
 if nivel_medico == "Especialista":
     pct_actual = 0.85 if row["Total_Bruto"] <= promedios_nivel[nivel_medico] else 0.90
-    pct_potencial = 0.90 if pct_actual == 0.85 else pct_actual
+    pct_potencial = 0.90
 else:  # Consultor
     pct_actual = 0.88 if row["Total_Bruto"] <= promedios_nivel[nivel_medico] else 0.92
-    pct_potencial = 0.92 if pct_actual == 0.88 else pct_actual
+    pct_potencial = 0.92
 
 abono_actual = row["Total_OSA_Disponible"] * pct_actual
 abono_potencial = row["Total_OSA_Disponible"] * pct_potencial
@@ -171,7 +179,7 @@ else:
     kpi_cols2[0].markdown(f"""
     <div style="background: linear-gradient(135deg, #2e7d32, #43a047); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <h4 style="margin: 0; font-size: 1.1rem;">¡Meta alcanzada!</h4>
-        <h2 style="margin: 10px 0; font-size: 2rem;">+{abono_potencial:,.2f} €</h2>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
         <p style="margin: 0; font-size: 1rem;">Ha superado el promedio de su nivel</p>
     </div>
     """, unsafe_allow_html=True)
@@ -224,4 +232,3 @@ fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="g
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}", text="Valor (€)")
 fig.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
-
