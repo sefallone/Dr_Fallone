@@ -4,15 +4,7 @@ import plotly.express as px
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
-st.title("📊 Escalabilidad del Pago a Médicos")
-
-st.markdown("""
-El sistema de pago funciona en **tres pasos**:
-
-1. Cada médico genera una **facturación bruta total** por servicio.
-2. Esa facturación se reparte entre **VITHAS** y **OSA**, según porcentajes.
-3. Del pool OSA, se calcula cuánto se le **abona al médico** según su nivel y comparación con el promedio de su grupo.
-""")
+st.title("📊 Escalabilidad del Pago a Médicos - Gradientes Proporcionales")
 
 # -------------------- Definición de médicos y servicios --------------------
 niveles = {
@@ -58,14 +50,6 @@ df_edit["Total_VITHAS"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["VIT
 
 promedios_nivel = df_edit.groupby("Nivel")["Total_Bruto"].mean().to_dict()
 
-# Métricas promedio
-st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
-c1, c2 = st.columns(2)
-with c1:
-    st.metric("Promedio Especialistas", f"{promedios_nivel.get('Especialista',0):,.2f} €")
-with c2:
-    st.metric("Promedio Consultores", f"{promedios_nivel.get('Consultor',0):,.2f} €")
-
 # Abono final según reglas de promedio
 def calcular_abono(row):
     nivel = row["Nivel"]
@@ -81,8 +65,9 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- Tabla interactiva con AgGrid --------------------
-st.markdown("### 👨‍⚕️ Detalle por servicio de un médico (interactivo)")
+# -------------------- Tabla interactiva con gradientes --------------------
+st.markdown("### 👨‍⚕️ Detalle por servicio de un médico (Gradientes Proporcionales)")
+
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
@@ -111,17 +96,20 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# -------------------- Preparar AgGrid excluyendo filas no numéricas si las hubiera --------------------
+# -------------------- Configuración AgGrid con gradientes proporcionales --------------------
 df_aggrid = df_detalle.copy()
-
-# -------------------- Configuración AgGrid --------------------
 gb = GridOptionsBuilder.from_dataframe(df_aggrid)
 gb.configure_default_column(editable=False, resizable=True)
 gb.configure_column("Servicio", pinned="left", width=150)
 
-# Colores simples de fondo según valor (sin JS)
-for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
-    gb.configure_column(col, cellStyle=lambda params: {'backgroundColor':'#D6EAF8' if params.value > 0 else '#FADBD8'})
+# Gradiente proporcional por columna
+cols_grad = ["Facturación","VITHAS","OSA","Abonado al Médico"]
+for col in cols_grad:
+    max_val = df_aggrid[col].max() if df_aggrid[col].max() > 0 else 1
+    def gradient_style(params, col_max=max_val):
+        intensity = int((params.value/col_max)*255) if params.value>0 else 0
+        return {'backgroundColor': f'rgba(52, 152, 219, {intensity/255})'}  # azul semitransparente
+    gb.configure_column(col, cellStyle=gradient_style)
 
 gridOptions = gb.build()
 AgGrid(df_aggrid, gridOptions=gridOptions, update_mode=GridUpdateMode.NO_UPDATE, fit_columns_on_grid_load=True, height=400)
@@ -142,11 +130,10 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("""
 ### 🔹 Conclusión del proceso
+- La **intensidad del color en la tabla** representa el porcentaje que cada valor representa del total de su columna.
 - Se parte de la **facturación total por servicio**.
 - Se aplica la distribución **VITHAS/OSA**.
 - Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
-- La tabla muestra detalle por servicio y fila TOTAL.
-- El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
+- La tabla permite comparar visualmente qué servicios aportan más a cada concepto.
 """)
-
 
