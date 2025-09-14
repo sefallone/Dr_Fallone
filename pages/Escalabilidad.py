@@ -64,7 +64,7 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- Tabla interactiva con gradientes (pandas Styler) --------------------
+# -------------------- Tabla interactiva por médico --------------------
 st.markdown("### 👨‍⚕️ Detalle por servicio de un médico")
 
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
@@ -95,6 +95,12 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
+# Fila % respecto al total bruto
+porcentajes = {"Servicio":"% del Total"}
+for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
+    porcentajes[col] = totales[col]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
+df_detalle = pd.concat([df_detalle, pd.DataFrame([porcentajes])], ignore_index=True)
+
 # Columnas numéricas
 num_cols = ["Facturación","VITHAS","OSA","Abonado al Médico"]
 
@@ -105,12 +111,21 @@ st.dataframe(
         .background_gradient(subset=["VITHAS"], cmap="PuBu")
         .background_gradient(subset=["OSA"], cmap="Greens")
         .background_gradient(subset=["Abonado al Médico"], cmap="Oranges")
-        .format({col: "{:,.2f} €" for col in num_cols}),
+        .format({col: "{:,.2f} €" for col in num_cols})
+        .format({"Facturación": "{:,.2f} €", "VITHAS": "{:,.2f} €", "OSA": "{:,.2f} €", "Abonado al Médico": "{:,.2f} €"}),
     use_container_width=True,
     height=400
 )
 
 st.markdown(f"**Resumen:** {medico_sel} facturó {row['Total_Bruto']:.2f} €, se abonará {row['Abonado_a_Medico']:.2f} € según su nivel ({row['Nivel']}).")
+
+# -------------------- KPI de promedios por nivel jerárquico --------------------
+st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
+c1, c2 = st.columns(2)
+with c1:
+    st.metric("Promedio Especialistas", f"{promedios_nivel.get('Especialista',0):,.2f} €")
+with c2:
+    st.metric("Promedio Consultores", f"{promedios_nivel.get('Consultor',0):,.2f} €")
 
 # -------------------- Gráfico comparativo por nivel --------------------
 st.markdown("### 📊 Comparación de abonos por nivel jerárquico")
