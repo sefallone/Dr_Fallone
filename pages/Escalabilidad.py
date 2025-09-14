@@ -60,6 +60,14 @@ df_edit["Total_VITHAS"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["VIT
 # Calcular promedio por nivel
 promedios_nivel = df_edit.groupby("Nivel")["Total_Bruto"].mean().to_dict()
 
+# Mostrar métricas de promedio por nivel jerárquico
+st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
+c1, c2 = st.columns(2)
+with c1:
+    st.metric("Promedio Especialistas", f"{promedios_nivel.get('Especialista',0):,.2f} €")
+with c2:
+    st.metric("Promedio Consultores", f"{promedios_nivel.get('Consultor',0):,.2f} €")
+
 # Calcular abono final según reglas de promedio
 def calcular_abono(row):
     nivel = row["Nivel"]
@@ -116,10 +124,7 @@ df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_pct])], ignore_index=True
 def color_fila(val):
     if isinstance(val, str):
         return ""
-    if val >= 0:
-        return "background-color: #D5F5E3"  # verde claro
-    else:
-        return ""
+    return "background-color: #D5F5E3; color: black"  # verde claro con texto negro
 
 st.dataframe(
     df_detalle.style.format({
@@ -154,3 +159,4 @@ st.markdown("""
 - La tabla muestra detalle por servicio, fila TOTAL y fila % sobre facturación total.
 - El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
+
