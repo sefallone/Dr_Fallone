@@ -4,6 +4,7 @@ import plotly.express as px
 import math
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
+st.title("-----------ORTHOPAEDIC SPECIALIST ALLIANCE---------------- "
 st.title("📊 Escalabilidad del Pago a Médicos")
 
 # -------------------- Definición de niveles y servicios --------------------
@@ -96,13 +97,13 @@ promedio_nivel = promedios_nivel[nivel_medico]
 if row["Total_Bruto"] > promedio_nivel:
     mensaje_html = f"""
     <div style="background-color: #d4edda; color: #155724; padding: 12px; border-radius: 5px; border-left: 4px solid #28a745; margin: 10px 0;">
-        <strong>¡Excelente rendimiento!</strong> Doctor {medico_sel}, usted está por <strong>ARRIBA</strong> del promedio de facturación de su grupo.
+        <strong>¡EXCELENTE RENDIMIENTO!</strong> Doctor {medico_sel}, usted está por <strong>ENCIMA</strong> del promedio de facturación de su grupo.
     </div>
     """
 else:
     mensaje_html = f"""
     <div style="background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 10px 0;">
-        <strong>Atención:</strong> Doctor {medico_sel}, usted está por <strong>ABAJO</strong> del promedio de facturación de su grupo.
+        <strong>ATENCIÓN:</strong> Doctor {medico_sel}, usted está por <strong>DEBAJO</strong> del promedio de facturación de su grupo.
     </div>
     """
 
@@ -216,6 +217,7 @@ if diferencia_abono > 0:
         <p style="margin: 0; font-size: 1rem;">
             <strong>Esta es la cantidad que estás dejando de percibir por no alcanzar el promedio de tu nivel.</strong> 
             Superar el promedio es el primer paso para convertirte en socio de OSA y acceder a mayores beneficios.
+            Recuerda que depende solo de ti, OSA te abona tu esfuerzo!!.
         </p>
     </div>
     """, unsafe_allow_html=True)
