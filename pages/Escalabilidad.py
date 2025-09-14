@@ -4,18 +4,20 @@ import plotly.express as px
 import math
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
+
+# Header con diseño mejorado
 st.markdown("""
-<div style="background: linear-gradient(135deg, #122E13, #0D2B0F); 
-            padding: 20px; 
+<div style="background: linear-gradient(135deg, #1b5e20, #2e7d32, #388e3c); 
+            padding: 25px; 
             border-radius: 15px; 
             text-align: center; 
-            color: orange;
-            margin-bottom: 20px;">
-    <h1 style="margin: 0; font-size: 2.5rem;"> ORTHOPAEDIC SPECIALIST ALLIANCE </h1>
-    <p style="margin: 5px 0 0 0; font-size: 1.2rem;">📊 Sistema de Escalabilidad de Pagos a Médicos</p>
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 25px;">
+    <h1 style="margin: 0; font-size: 2.8rem;">🦴 ORTHOPAEDIC SPECIALIST ALLIANCE ⚕️</h1>
+    <p style="margin: 10px 0 0 0; font-size: 1.3rem;">📊 Sistema de Escalabilidad de Pagos 💰</p>
 </div>
 """, unsafe_allow_html=True)
-
 
 # -------------------- Definición de niveles y servicios --------------------
 niveles = {
@@ -61,16 +63,29 @@ df_edit["Total_Bruto"] = df_edit[list(servicios.keys())].sum(axis=1)
 df_edit["Total_OSA_Disponible"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["OSA"] for s in servicios), axis=1)
 df_edit["Total_VITHAS"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["VITHAS"] for s in servicios), axis=1)
 
-promedios_nivel = df_edit.groupby("Nivel")["Total_Bruto"].mean().to_dict()
+# -------------------- CALCULAR PROMEDIOS SOLO CON MÉDICOS QUE FACTURARON DIFERENTE DE CERO --------------------
+# Filtrar médicos con facturación mayor a cero
+df_facturacion_positiva = df_edit[df_edit["Total_Bruto"] > 0]
+
+# Calcular promedios solo con médicos que facturaron
+if not df_facturacion_positiva.empty:
+    promedios_nivel = df_facturacion_positiva.groupby("Nivel")["Total_Bruto"].mean().to_dict()
+else:
+    promedios_nivel = {"Especialista": 0, "Consultor": 0}
 
 def calcular_abono(row):
     nivel = row["Nivel"]
     total_bruto = row["Total_Bruto"]
     total_osa = row["Total_OSA_Disponible"]
+    
+    # Si no facturó nada, abono es cero
+    if total_bruto == 0:
+        return 0.0
+    
     if nivel == "Especialista":
-        pct = 0.90 if total_bruto > promedios_nivel[nivel] else 0.85
+        pct = 0.90 if total_bruto > promedios_nivel.get(nivel, 0) else 0.85
     elif nivel == "Consultor":
-        pct = 0.92 if total_bruto > promedios_nivel[nivel] else 0.88
+        pct = 0.92 if total_bruto > promedios_nivel.get(nivel, 0) else 0.88
     else:
         pct = 0.0
     return total_osa * pct
@@ -79,18 +94,27 @@ df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
 # -------------------- KPI tipo tarjeta promedios por nivel --------------------
 st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
+st.caption("⚠️ Calculado solo con médicos que facturaron montos diferentes de cero")
+
 c1, c2 = st.columns(2)
+
+# Mostrar también la cantidad de médicos considerados en el promedio
+especialistas_con_facturacion = len(df_facturacion_positiva[df_facturacion_positiva["Nivel"] == "Especialista"])
+consultores_con_facturacion = len(df_facturacion_positiva[df_facturacion_positiva["Nivel"] == "Consultor"])
+
 c1.markdown(f"""
 <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 20px; border-radius: 15px; text-align: center; color: white;">
     <h4>Promedio Especialistas</h4>
-    <h2>{promedios_nivel.get('Especialista',0):,.2f} €</h2>
+    <h2 style="margin: 5px 0;">{promedios_nivel.get('Especialista',0):,.2f} €</h2>
+    <p style="margin: 0; font-size: 0.9rem;">({especialistas_con_facturacion} médicos con facturación)</p>
 </div>
 """, unsafe_allow_html=True)
 
 c2.markdown(f"""
 <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); padding: 20px; border-radius: 15px; text-align: center; color: white;">
     <h4>Promedio Consultores</h4>
-    <h2>{promedios_nivel.get('Consultor',0):,.2f} €</h2>
+    <h2 style="margin: 5px 0;">{promedios_nivel.get('Consultor',0):,.2f} €</h2>
+    <p style="margin: 0; font-size: 0.9rem;">({consultores_con_facturacion} médicos con facturación)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -101,7 +125,7 @@ row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
 # -------------------- Mensaje personalizado sobre el promedio --------------------
 nivel_medico = row["Nivel"]
-promedio_nivel = promedios_nivel[nivel_medico]
+promedio_nivel = promedios_nivel.get(nivel_medico, 0)
 
 # Usamos markdown en lugar de st.success/st.warning para evitar problemas con DeltaGenerator
 if row["Total_Bruto"] > promedio_nivel:
@@ -122,10 +146,10 @@ st.markdown(mensaje_html, unsafe_allow_html=True)
 # -------------------- Cálculos para el potencial de ganancia --------------------
 # Determinar porcentajes actuales y potenciales
 if nivel_medico == "Especialista":
-    pct_actual = 0.85 if row["Total_Bruto"] <= promedios_nivel[nivel_medico] else 0.90
+    pct_actual = 0.85 if row["Total_Bruto"] <= promedio_nivel else 0.90
     pct_potencial = 0.90
 else:  # Consultor
-    pct_actual = 0.88 if row["Total_Bruto"] <= promedios_nivel[nivel_medico] else 0.92
+    pct_actual = 0.88 if row["Total_Bruto"] <= promedio_nivel else 0.92
     pct_potencial = 0.92
 
 abono_actual = row["Total_OSA_Disponible"] * pct_actual
@@ -138,7 +162,6 @@ osa_final_actual = row["Total_OSA_Disponible"] - abono_actual
 osa_final_potencial = row["Total_OSA_Disponible"] - abono_potencial
 
 # -------------------- Nuevo diseño de KPIs para el médico --------------------
-
 # Título con nombre del médico
 st.markdown(f"### 📝 Reporte de Rendimiento del Médico - <span style='font-size:1.3em; color:#2e7d32;'>Dr. {medico_sel}</span>", unsafe_allow_html=True)
 
@@ -357,7 +380,7 @@ if resumen_data:
                           title=f"Facturación por Servicio - Dr. {medico_sel}",
                           text='Facturado (€)',
                           color='Servicio')
-    fig_servicios.update_traces(texttemplate='%{text:,.0f} €', textposition='inside')
+    fig_servicios.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
     fig_servicios.update_layout(showlegend=False, xaxis_tickangle=-45)
     st.plotly_chart(fig_servicios, use_container_width=True)
 
@@ -371,5 +394,5 @@ df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VI
 
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}", text="Valor (€)")
-fig.update_traces(texttemplate='%{text:,.0f} €', textposition='inside')
+fig.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
