@@ -192,6 +192,75 @@ kpi_cols2[1].markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# -------------------- NUEVO KPI: POTENCIAL DE ESCALABILIDAD --------------------
+st.markdown("---")
+st.subheader("🚀 Potencial de Escalabilidad")
+
+# Cálculos de proyección anual
+abono_actual_anual = abono_actual * 12
+abono_potencial_anual = abono_potencial * 12
+diferencia_anual = diferencia_abono * 12
+
+kpi_cols3 = st.columns(2)
+
+if diferencia_abono > 0:
+    # Caso: No superó el promedio
+    kpi_cols3[0].markdown(f"""
+    <div style="background: linear-gradient(135deg, #d32f2f, #f44336); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 1.1rem;">Pérdida Anual Estimada</h4>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{diferencia_anual:,.2f} €</h2>
+        <p style="margin: 0; font-size: 1rem;">Potencial no realizado en 12 meses</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    kpi_cols3[1].markdown(f"""
+    <div style="background-color: #ffebee; color: #c62828; padding: 20px; border-radius: 10px; border-left: 4px solid #f44336;">
+        <h4 style="margin: 0 0 15px 0; font-size: 1.1rem;">⚠️ Impacto en tus ingresos</h4>
+        <p style="margin: 0; font-size: 1rem;">
+            <strong>Esta es la cantidad que NO INGRESARÁ a tu cuenta si no cambiamos lo que estás haciendo.</strong>
+            Equivale a <strong>{diferencia_anual/12:,.2f} € mensuales</strong> que podrías estar ganando adicionalmente.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+else:
+    # Caso: Superó el promedio
+    kpi_cols3[0].markdown(f"""
+    <div style="background: linear-gradient(135deg, #2e7d32, #43a047); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 1.1rem;">Ganancia Anual Proyectada</h4>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial_anual:,.2f} €</h2>
+        <p style="margin: 0; font-size: 1rem;">Proyección de ingresos en 12 meses</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    kpi_cols3[1].markdown(f"""
+    <div style="background-color: #e8f5e9; color: #2e7d32; padding: 20px; border-radius: 10px; border-left: 4px solid #4caf50;">
+        <h4 style="margin: 0 0 15px 0; font-size: 1.1rem;">🎯 Camino al éxito</h4>
+        <p style="margin: 0; font-size: 1rem;">
+            <strong>Este es el camino para convertirte en socio de OSA y además facturar mucho más anualmente.</strong>
+            Mantén este rendimiento para acceder a beneficios exclusivos y mayores porcentajes de retribución.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Gráfico de comparación anual
+st.markdown("#### 📊 Comparativa Anual de Ingresos")
+comparativa_data = {
+    'Escenario': ['Actual', 'Potencial'],
+    'Ingresos Anuales (€)': [abono_actual_anual, abono_potencial_anual]
+}
+df_comparativa = pd.DataFrame(comparativa_data)
+
+fig_comparativa = px.bar(df_comparativa, x='Escenario', y='Ingresos Anuales (€)', 
+                         color='Escenario',
+                         color_discrete_map={'Actual': '#43a047', 'Potencial': '#1976d2'},
+                         text_auto='.2s',
+                         title=f"Proyección Anual de Ingresos - Dr. {medico_sel}")
+
+fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='outside')
+fig_comparativa.update_layout(showlegend=False)
+st.plotly_chart(fig_comparativa, use_container_width=True)
+
 # -------------------- Facturación por servicio --------------------
 st.markdown("---")
 st.subheader("🧾 Desglose por Servicios")
