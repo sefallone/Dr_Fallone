@@ -4,8 +4,18 @@ import plotly.express as px
 import math
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
-st.title("-----------ORTHOPAEDIC SPECIALIST ALLIANCE---------------- ")
-st.title("📊 Escalabilidad del Pago a Médicos")
+st.markdown("""
+<div style="background: linear-gradient(135deg, #1b5e20, #2e7d32); 
+            padding: 20px; 
+            border-radius: 15px; 
+            text-align: center; 
+            color: white;
+            margin-bottom: 20px;">
+    <h1 style="margin: 0; font-size: 2.5rem;">🦴 ORTHOPAEDIC SPECIALIST ALLIANCE 🦴</h1>
+    <p style="margin: 5px 0 0 0; font-size: 1.2rem;">📊 Sistema de Escalabilidad de Pagos a Médicos</p>
+</div>
+""", unsafe_allow_html=True)
+
 
 # -------------------- Definición de niveles y servicios --------------------
 niveles = {
