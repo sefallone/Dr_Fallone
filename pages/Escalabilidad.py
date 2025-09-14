@@ -127,6 +127,7 @@ osa_final_actual = row["Total_OSA_Disponible"] - abono_actual
 osa_final_potencial = row["Total_OSA_Disponible"] - abono_potencial
 
 # -------------------- Nuevo diseño de KPIs para el médico --------------------
+
 # Título con nombre del médico
 st.markdown(f"### 📝 Reporte de Rendimiento del Médico - <span style='font-size:1.3em; color:#2e7d32;'>Dr. {medico_sel}</span>", unsafe_allow_html=True)
 
@@ -162,7 +163,102 @@ kpi_cols1[3].markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# -------------------- NUEVA SECCIÓN: KPIs POR SERVICIO --------------------
+# -------------------- POTENCIAL DE INGRESOS --------------------
+st.markdown("---")
+st.subheader("📈 Potencial de Ingresos")
+
+kpi_cols2 = st.columns(2)
+
+if diferencia_abono > 0:
+    kpi_cols2[0].markdown(f"""
+    <div style="background: linear-gradient(135deg, #e65100, #ef6c00); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 1.1rem;">Potencial no alcanzado</h4>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{diferencia_abono:,.2f} €</h2>
+        <p style="margin: 0; font-size: 1rem;">Por no superar el promedio de su nivel</p>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    kpi_cols2[0].markdown(f"""
+    <div style="background: linear-gradient(135deg, #2e7d32, #43a047); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 1.1rem;">¡Meta alcanzada!</h4>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
+        <p style="margin: 0; font-size: 1rem;">Ha superado el promedio de su nivel</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+kpi_cols2[1].markdown(f"""
+<div style="background: linear-gradient(135deg, #1565c0, #1976d2); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h4 style="margin: 0; font-size: 1.1rem;">Abono potencial máximo</h4>
+    <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
+    <p style="margin: 0; font-size: 1rem;">({porcentaje_potencial:.1f}% de la facturación)</p>
+</div>
+""", unsafe_allow_html=True)
+
+# -------------------- POTENCIAL DE ESCALABILIDAD --------------------
+st.markdown("---")
+st.subheader("🚀 Potencial de Escalabilidad")
+
+kpi_cols3 = st.columns(2)
+
+if diferencia_abono > 0:
+    # Caso: No superó el promedio
+    kpi_cols3[0].markdown(f"""
+    <div style="background: linear-gradient(135deg, #d32f2f, #f44336); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 1.1rem;">Pérdida Estimada</h4>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{diferencia_abono:,.2f} €</h2>
+        <p style="margin: 0; font-size: 1rem;">Por no alcanzar tu potencial máximo</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    kpi_cols3[1].markdown(f"""
+    <div style="background-color: #ffebee; color: #c62828; padding: 20px; border-radius: 10px; border-left: 4px solid #f44336;">
+        <h4 style="margin: 0 0 15px 0; font-size: 1.1rem;">⚠️ Oportunidad de mejora</h4>
+        <p style="margin: 0; font-size: 1rem;">
+            <strong>Esta es la cantidad que estás dejando de percibir por no alcanzar el promedio de tu nivel.</strong> 
+            Superar el promedio es el primer paso para convertirte en socio de OSA y acceder a mayores beneficios.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+else:
+    # Caso: Superó el promedio
+    kpi_cols3[0].markdown(f"""
+    <div style="background: linear-gradient(135deg, #2e7d32, #43a047); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 1.1rem;">Potencial Alcanzado</h4>
+        <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
+        <p style="margin: 0; font-size: 1rem;">Máximo rendimiento obtenido</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    kpi_cols3[1].markdown(f"""
+    <div style="background-color: #e8f5e9; color: #2e7d32; padding: 20px; border-radius: 10px; border-left: 4px solid #4caf50;">
+        <h4 style="margin: 0 0 15px 0; font-size: 1.1rem;">🎯 Excelente rendimiento</h4>
+        <p style="margin: 0; font-size: 1rem;">
+            <strong>Este es el camino para convertirte en socio de OSA.</strong> 
+            Mantén este nivel de desempeño para acceder a beneficios exclusivos y mayores porcentajes de retribución.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Gráfico de comparación
+st.markdown("#### 📊 Comparativa de Potencial")
+comparativa_data = {
+    'Escenario': ['Actual', 'Potencial'],
+    'Ingresos (€)': [abono_actual, abono_potencial]
+}
+df_comparativa = pd.DataFrame(comparativa_data)
+
+fig_comparativa = px.bar(df_comparativa, x='Escenario', y='Ingresos (€)', 
+                         color='Escenario',
+                         color_discrete_map={'Actual': '#43a047', 'Potencial': '#1976d2'},
+                         text_auto='.2s',
+                         title=f"Comparativa de Potencial - Dr. {medico_sel}")
+
+fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='outside')
+fig_comparativa.update_layout(showlegend=False)
+st.plotly_chart(fig_comparativa, use_container_width=True)
+
+# -------------------- DESGLOSE POR SERVICIO --------------------
 st.markdown("---")
 st.subheader("🧮 Desglose por Servicio")
 
@@ -252,128 +348,6 @@ if resumen_data:
     fig_servicios.update_traces(texttemplate='%{text:,.0f} €', textposition='outside')
     fig_servicios.update_layout(showlegend=False, xaxis_tickangle=-45)
     st.plotly_chart(fig_servicios, use_container_width=True)
-
-# Segunda fila de KPIs de potencial (la que ya tenías)
-st.markdown("---")
-st.subheader("📈 Potencial de Ingresos")
-
-kpi_cols2 = st.columns(2)
-
-if diferencia_abono > 0:
-    kpi_cols2[0].markdown(f"""
-    <div style="background: linear-gradient(135deg, #e65100, #ef6c00); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h4 style="margin: 0; font-size: 1.1rem;">Potencial no alcanzado</h4>
-        <h2 style="margin: 10px 0; font-size: 2rem;">{diferencia_abono:,.2f} €</h2>
-        <p style="margin: 0; font-size: 1rem;">Por no superar el promedio de su nivel</p>
-    </div>
-    """, unsafe_allow_html=True)
-else:
-    kpi_cols2[0].markdown(f"""
-    <div style="background: linear-gradient(135deg, #2e7d32, #43a047); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h4 style="margin: 0; font-size: 1.1rem;">¡Meta alcanzada!</h4>
-        <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
-        <p style="margin: 0; font-size: 1rem;">Ha superado el promedio de su nivel</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-kpi_cols2[1].markdown(f"""
-<div style="background: linear-gradient(135deg, #1565c0, #1976d2); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <h4 style="margin: 0; font-size: 1.1rem;">Abono potencial máximo</h4>
-    <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
-    <p style="margin: 0; font-size: 1rem;">({porcentaje_potencial:.1f}% de la facturación)</p>
-</div>
-""", unsafe_allow_html=True)
-
-# -------------------- NUEVO KPI: POTENCIAL DE ESCALABILIDAD --------------------
-st.markdown("---")
-st.subheader("🚀 Potencial de Escalabilidad")
-
-kpi_cols3 = st.columns(2)
-
-if diferencia_abono > 0:
-    # Caso: No superó el promedio
-    kpi_cols3[0].markdown(f"""
-    <div style="background: linear-gradient(135deg, #d32f2f, #f44336); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h4 style="margin: 0; font-size: 1.1rem;">Pérdida Estimada</h4>
-        <h2 style="margin: 10px 0; font-size: 2rem;">{diferencia_abono:,.2f} €</h2>
-        <p style="margin: 0; font-size: 1rem;">Por no alcanzar tu potencial máximo</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    kpi_cols3[1].markdown(f"""
-    <div style="background-color: #ffebee; color: #c62828; padding: 20px; border-radius: 10px; border-left: 4px solid #f44336;">
-        <h4 style="margin: 0 0 15px 0; font-size: 1.1rem;">⚠️ Oportunidad de mejora</h4>
-        <p style="margin: 0; font-size: 1rem;">
-            <strong>Esta es la cantidad que estás dejando de percibir por no alcanzar el promedio de tu nivel.</strong> 
-            Superar el promedio es el primer paso para convertirte en socio de OSA y acceder a mayores beneficios.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-else:
-    # Caso: Superó el promedio
-    kpi_cols3[0].markdown(f"""
-    <div style="background: linear-gradient(135deg, #2e7d32, #43a047); padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h4 style="margin: 0; font-size: 1.1rem;">Potencial Alcanzado</h4>
-        <h2 style="margin: 10px 0; font-size: 2rem;">{abono_potencial:,.2f} €</h2>
-        <p style="margin: 0; font-size: 1rem;">Máximo rendimiento obtenido</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    kpi_cols3[1].markdown(f"""
-    <div style="background-color: #e8f5e9; color: #2e7d32; padding: 20px; border-radius: 10px; border-left: 4px solid #4caf50;">
-        <h4 style="margin: 0 0 15px 0; font-size: 1.1rem;">🎯 Excelente rendimiento</h4>
-        <p style="margin: 0; font-size: 1rem;">
-            <strong>Este es el camino para convertirte en socio de OSA.</strong> 
-            Mantén este nivel de desempeño para acceder a beneficios exclusivos y mayores porcentajes de retribución.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# Gráfico de comparación
-st.markdown("#### 📊 Comparativa de Potencial")
-comparativa_data = {
-    'Escenario': ['Actual', 'Potencial'],
-    'Ingresos (€)': [abono_actual, abono_potencial]
-}
-df_comparativa = pd.DataFrame(comparativa_data)
-
-fig_comparativa = px.bar(df_comparativa, x='Escenario', y='Ingresos (€)', 
-                         color='Escenario',
-                         color_discrete_map={'Actual': '#43a047', 'Potencial': '#1976d2'},
-                         text_auto='.2s',
-                         title=f"Comparativa de Potencial - Dr. {medico_sel}")
-
-fig_comparativa.update_traces(texttemplate='%{y:,.0f} €', textposition='inside')
-fig_comparativa.update_layout(showlegend=False)
-st.plotly_chart(fig_comparativa, use_container_width=True)
-# -------------------- Facturación por servicio --------------------
-st.markdown("---")
-st.subheader("🧾 Desglose por Servicios")
-
-servicios_con_facturacion = {s: row[s] for s in servicios.keys() if row[s] > 0}
-servicios_sin_facturacion = [s for s in servicios.keys() if row[s] == 0]
-
-if servicios_con_facturacion:
-    num_cols = min(4, len(servicios_con_facturacion))
-    cols_servicios = st.columns(num_cols)
-    
-    colores_servicios = ["#2e7d32", "#388e3c", "#43a047", "#4caf50", "#66bb6a", "#81c784", "#a5d6a7", "#c8e6c9"]
-    
-    for i, (servicio, monto) in enumerate(servicios_con_facturacion.items()):
-        col_idx = i % num_cols
-        color_idx = i % len(colores_servicios)
-        
-        cols_servicios[col_idx].markdown(f"""
-        <div style="background-color: {colores_servicios[color_idx]}; border-radius: 8px; padding: 12px; color: white; text-align: center; margin-bottom: 10px;">
-            <h5 style="margin: 0 0 8px 0; font-size: 0.9rem;">{servicio}</h5>
-            <p style="margin: 0; font-size: 1.1rem; font-weight: bold;">{monto:,.2f} €</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-# Servicios sin facturación
-if servicios_sin_facturacion:
-    st.info(f"**Servicios sin facturación:** {', '.join(servicios_sin_facturacion)}")
 
 # -------------------- Gráfico comparativo por nivel jerárquico --------------------
 st.markdown("---")
