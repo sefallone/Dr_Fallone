@@ -4,7 +4,7 @@ import plotly.express as px
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
-st.title("📊 Escalabilidad del Pago a Médicos - Gradientes Proporcionales")
+st.title("📊 Escalabilidad del Pago a Médicos - Gradientes por Columna")
 
 # -------------------- Definición de médicos y servicios --------------------
 niveles = {
@@ -65,8 +65,8 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- Tabla interactiva con gradientes --------------------
-st.markdown("### 👨‍⚕️ Detalle por servicio de un médico (Gradientes Proporcionales)")
+# -------------------- Tabla interactiva con gradientes por columna --------------------
+st.markdown("### 👨‍⚕️ Detalle por servicio de un médico (Colores por columna)")
 
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
@@ -96,20 +96,26 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# -------------------- Configuración AgGrid con gradientes proporcionales --------------------
+# -------------------- Configuración AgGrid --------------------
 df_aggrid = df_detalle.copy()
 gb = GridOptionsBuilder.from_dataframe(df_aggrid)
 gb.configure_default_column(editable=False, resizable=True)
 gb.configure_column("Servicio", pinned="left", width=150)
 
-# Gradiente proporcional por columna
-cols_grad = ["Facturación","VITHAS","OSA","Abonado al Médico"]
-for col in cols_grad:
+# Gradientes distintos por columna
+colores = {
+    "Facturación": "rgba(52, 152, 219, {intensity})",      # azul
+    "VITHAS": "rgba(52, 152, 219, {intensity})",          # celeste
+    "OSA": "rgba(46, 204, 113, {intensity})",             # verde
+    "Abonado al Médico": "rgba(243, 156, 18, {intensity})" # naranja
+}
+
+for col, color in colores.items():
     max_val = df_aggrid[col].max() if df_aggrid[col].max() > 0 else 1
-    def gradient_style(params, col_max=max_val):
-        intensity = int((params.value/col_max)*255) if params.value>0 else 0
-        return {'backgroundColor': f'rgba(52, 152, 219, {intensity/255})'}  # azul semitransparente
-    gb.configure_column(col, cellStyle=gradient_style)
+    def gradient(params, col_max=max_val, col_color=color):
+        intensity = (params.value / col_max) if params.value>0 else 0
+        return {'backgroundColor': col_color.format(intensity=intensity)}
+    gb.configure_column(col, cellStyle=gradient)
 
 gridOptions = gb.build()
 AgGrid(df_aggrid, gridOptions=gridOptions, update_mode=GridUpdateMode.NO_UPDATE, fit_columns_on_grid_load=True, height=400)
@@ -130,10 +136,8 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("""
 ### 🔹 Conclusión del proceso
-- La **intensidad del color en la tabla** representa el porcentaje que cada valor representa del total de su columna.
-- Se parte de la **facturación total por servicio**.
-- Se aplica la distribución **VITHAS/OSA**.
-- Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
-- La tabla permite comparar visualmente qué servicios aportan más a cada concepto.
+- Los **colores por columna** permiten identificar fácilmente Facturación, VITHAS, OSA y Abono.
+- La **intensidad del color** muestra proporcionalmente cuánto aporta cada celda respecto al total de la columna.
+- La tabla y gráficos permiten entender claramente **qué servicios generan más facturación y abonos**.
 """)
 
