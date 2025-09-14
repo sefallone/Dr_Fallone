@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 st.title("📊 Escalabilidad del Pago a Médicos")
@@ -30,13 +31,11 @@ servicios = {
     "Podología": {"VITHAS": 0.30, "OSA": 0.70}
 }
 
-# Lista plana de médicos
+# -------------------- Entrada de datos --------------------
 medicos = []
 for nivel, lista in niveles.items():
     medicos.extend([(m, nivel) for m in lista])
 
-# -------------------- Entrada de datos interactiva --------------------
-st.markdown("### 📋 Ingrese los montos por médico y servicio")
 cols = ["Médico", "Nivel"] + list(servicios.keys())
 rows = []
 for medico, nivel in medicos:
@@ -57,10 +56,9 @@ df_edit["Total_Bruto"] = df_edit[list(servicios.keys())].sum(axis=1)
 df_edit["Total_OSA_Disponible"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["OSA"] for s in servicios), axis=1)
 df_edit["Total_VITHAS"] = df_edit.apply(lambda row: sum(row[s]*servicios[s]["VITHAS"] for s in servicios), axis=1)
 
-# Calcular promedio por nivel
 promedios_nivel = df_edit.groupby("Nivel")["Total_Bruto"].mean().to_dict()
 
-# Mostrar métricas de promedio por nivel jerárquico
+# Métricas promedio
 st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
 c1, c2 = st.columns(2)
 with c1:
@@ -68,12 +66,11 @@ with c1:
 with c2:
     st.metric("Promedio Consultores", f"{promedios_nivel.get('Consultor',0):,.2f} €")
 
-# Calcular abono final según reglas de promedio
+# Abono final según reglas de promedio
 def calcular_abono(row):
     nivel = row["Nivel"]
     total_bruto = row["Total_Bruto"]
     total_osa = row["Total_OSA_Disponible"]
-    
     if nivel == "Especialista":
         pct = 0.90 if total_bruto > promedios_nivel[nivel] else 0.85
     elif nivel == "Consultor":
@@ -84,8 +81,8 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- Tabla detalle por servicio --------------------
-st.markdown("### 👨‍⚕️ Detalle por servicio de un médico")
+# -------------------- Tabla interactiva con AgGrid --------------------
+st.markdown("### 👨‍⚕️ Detalle por servicio de un médico (interactivo)")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
@@ -114,42 +111,37 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# Fila % sobre Facturación total (formato correcto)
+# Fila % sobre Facturación total
 fila_pct = {"Servicio":"% del Total"}
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
     fila_pct[col] = totales[col]/totales["Facturación"]*100
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_pct])], ignore_index=True)
 
-# -------------------- Gradientes avanzados por columna --------------------
-maximos = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].max()
+# -------------------- Configuración AgGrid --------------------
+gb = GridOptionsBuilder.from_dataframe(df_detalle)
+gb.configure_default_column(editable=False, resizable=True)
+gb.configure_column("Servicio", pinned="left", width=150)
+# Formato y barra de progreso para columnas numéricas
+barra_js = JsCode("""
+function(params) {
+    if(params.value == null) return "";
+    var value = parseFloat(params.value);
+    var max = params.colDef.maxValue;
+    var percent = Math.min(value / max * 100, 100);
+    return '<div style="background: linear-gradient(90deg, #82E0AA ' + percent + '%, transparent ' + percent + '%); width:100%; padding:2px;">' + value.toFixed(2) + '</div>';
+}
+""")
+for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
+    gb.configure_column(col, cellRenderer=barra_js, maxValue=df_detalle[col].max())
 
-def barra_gradiente_fila(fila):
-    res = []
-    for col in fila.index:
-        val = fila[col]
-        if isinstance(val,(int,float)):
-            max_val = maximos[col] if col in maximos else 0
-            width = int((val/max_val)*100) if max_val>0 else 0
-            res.append(f"background: linear-gradient(90deg, #82E0AA {width}%, transparent {width}%); color: black")
-        else:
-            res.append("")
-    return res
-
-st.dataframe(
-    df_detalle.style.format({
-        "Facturación":"{:,.2f} €",
-        "VITHAS":"{:,.2f} €",
-        "OSA":"{:,.2f} €",
-        "Abonado al Médico":"{:,.2f} €"
-    }).apply(barra_gradiente_fila, axis=1),
-    use_container_width=True
-)
+gridOptions = gb.build()
+AgGrid(df_detalle, gridOptions=gridOptions, fit_columns_on_grid_load=True, height=400)
 
 st.markdown(f"**Resumen:** {medico_sel} facturó {row['Total_Bruto']:.2f} €, se abonará {row['Abonado_a_Medico']:.2f} € según su nivel ({row['Nivel']}).")
 
 # -------------------- Gráfico comparativo por nivel --------------------
 st.markdown("### 📊 Comparación de abonos por nivel jerárquico")
-nivel_sel = st.selectbox("Seleccione nivel jerárquico", list(niveles.keys()))
+nivel_sel = st.selectbox("Seleccione nivel jerárquico para gráfico", list(niveles.keys()))
 df_nivel = df_edit[df_edit["Nivel"]==nivel_sel].copy()
 
 df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VITHAS","Total_OSA_Disponible","Abonado_a_Medico"],
@@ -159,7 +151,6 @@ fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="g
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}")
 st.plotly_chart(fig, use_container_width=True)
 
-# -------------------- Explicación final --------------------
 st.markdown("""
 ### 🔹 Conclusión del proceso
 - Se parte de la **facturación total por servicio**.
@@ -168,5 +159,3 @@ st.markdown("""
 - La tabla muestra detalle por servicio, fila TOTAL y fila % sobre facturación total.
 - El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
-
-
