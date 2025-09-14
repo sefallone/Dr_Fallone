@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import math
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 st.title("📊 Escalabilidad del Pago a Médicos")
@@ -90,27 +91,37 @@ row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 # -------------------- Mini-dashboard de reporte del médico --------------------
 st.markdown("### 📝 Mini-Reporte del Médico")
 
-# Crear tarjetas para cada servicio
-kpi_cols = st.columns(len(servicios))
-for i, s in enumerate(servicios.keys()):
-    fact = row[s]
-    vithas = fact*servicios[s]["VITHAS"]
-    osa = fact*servicios[s]["OSA"]
-    if row["Nivel"]=="Especialista":
-        pct = 0.90 if row["Total_Bruto"]>promedios_nivel["Especialista"] else 0.85
-    else:
-        pct = 0.92 if row["Total_Bruto"]>promedios_nivel["Consultor"] else 0.88
-    abon = osa * pct
-    kpi_cols[i].markdown(f"""
-    <div style="background-color:#2e7d32; border-radius:10px; padding:15px; color:white; text-align:center;">
-        <h5>{s}</h5>
-        <p>Fact: {fact:,.2f} €</p>
-        <p>VITHAS: {vithas:,.2f} €</p>
-        <p>Abono: {abon:,.2f} €</p>
-    </div>
-    """, unsafe_allow_html=True)
+# Filtrar servicios con facturación > 0
+serv_no_cero = {s: row[s] for s in servicios.keys() if row[s] > 0}
+serv_cero = [s for s in servicios.keys() if row[s] == 0]
 
-# Tarjetas adicionales del reporte
+num_cols = 3
+num_filas = math.ceil(len(serv_no_cero)/num_cols)
+
+for i in range(num_filas):
+    cols_kpi = st.columns(num_cols)
+    for j in range(num_cols):
+        idx = i*num_cols + j
+        if idx < len(serv_no_cero):
+            s = list(serv_no_cero.keys())[idx]
+            fact = row[s]
+            vithas = fact*servicios[s]["VITHAS"]
+            osa = fact*servicios[s]["OSA"]
+            if row["Nivel"]=="Especialista":
+                pct = 0.90 if row["Total_Bruto"]>promedios_nivel["Especialista"] else 0.85
+            else:
+                pct = 0.92 if row["Total_Bruto"]>promedios_nivel["Consultor"] else 0.88
+            abon = osa * pct
+            cols_kpi[j].markdown(f"""
+            <div style="background-color:#2e7d32; border-radius:10px; padding:15px; color:white; text-align:center;">
+                <h5>{s}</h5>
+                <p>Fact: {fact:,.2f} €</p>
+                <p>VITHAS: {vithas:,.2f} €</p>
+                <p>Abono: {abon:,.2f} €</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+# Tarjetas resumen generales del médico
 osa_total = row["Total_OSA_Disponible"]
 osa_final = osa_total - row["Abonado_a_Medico"]
 porc_abonado = row["Abonado_a_Medico"]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
@@ -145,9 +156,13 @@ rep_cols[3].markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Nota servicios sin facturación
+if serv_cero:
+    st.info(f"Usted no facturó nada en: {', '.join(serv_cero)}")
+
 # -------------------- Gráfico comparativo por nivel jerárquico --------------------
 st.markdown("### 📊 Comparación de abonos por nivel jerárquico")
-nivel_sel = st.selectbox("Seleccione nivel jerárquico para gráfico", list(niveles.keys()))
+nivel_sel = st.selectbox("Seleccione nivel jerárquico para gráfico", list(niveles.keys()), key="nivel_grafico")
 df_nivel = df_edit[df_edit["Nivel"]==nivel_sel].copy()
 df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VITHAS","Total_OSA_Disponible","Abonado_a_Medico"],
                         var_name="Concepto", value_name="Valor (€)")
@@ -155,4 +170,3 @@ df_melt = df_nivel.melt(id_vars=["Médico"], value_vars=["Total_Bruto","Total_VI
 fig = px.bar(df_melt, x="Médico", y="Valor (€)", color="Concepto", barmode="group",
              title=f"Comparación de abonos de médicos del nivel {nivel_sel}")
 st.plotly_chart(fig, use_container_width=True)
-
