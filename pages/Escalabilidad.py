@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(page_title="Escalabilidad", layout="wide", page_icon="📊")
 st.title("📊 Escalabilidad del Pago a Médicos")
@@ -66,10 +65,9 @@ def calcular_abono(row):
 
 df_edit["Abonado_a_Medico"] = df_edit.apply(calcular_abono, axis=1)
 
-# -------------------- KPI tipo tarjeta --------------------
+# -------------------- KPI tipo tarjeta promedios por nivel --------------------
 st.markdown("### 📈 Promedio de facturación por nivel jerárquico")
 c1, c2 = st.columns(2)
-
 c1.markdown(f"""
 <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 20px; border-radius: 15px; text-align: center; color: white;">
     <h4>Promedio Especialistas</h4>
@@ -85,59 +83,65 @@ c2.markdown(f"""
 """, unsafe_allow_html=True)
 
 # -------------------- Selección de médico --------------------
-st.markdown("### 👨‍⚕️ Detalle y Reporte del Médico")
+st.markdown("### 👨‍⚕️ Reporte Interactivo del Médico")
 medico_sel = st.selectbox("Seleccione un médico", df_edit["Médico"].unique())
 row = df_edit[df_edit["Médico"]==medico_sel].iloc[0]
 
-# -------------------- Tabla de detalle por servicio usando AgGrid --------------------
-detalle_servicios = []
-for s in servicios.keys():
+# -------------------- Mini-dashboard de reporte del médico --------------------
+st.markdown("### 📝 Mini-Reporte del Médico")
+
+# Crear tarjetas para cada servicio
+kpi_cols = st.columns(len(servicios))
+for i, s in enumerate(servicios.keys()):
     fact = row[s]
-    vithas = fact * servicios[s]["VITHAS"]
-    osa = fact * servicios[s]["OSA"]
-    abon = osa * (0.90 if row["Nivel"]=="Especialista" and row["Total_Bruto"]>promedios_nivel["Especialista"]
-                  else 0.85 if row["Nivel"]=="Especialista"
-                  else 0.92 if row["Nivel"]=="Consultor" and row["Total_Bruto"]>promedios_nivel["Consultor"]
-                  else 0.88)
-    detalle_servicios.append({
-        "Servicio": s,
-        "Facturación": fact,
-        "VITHAS": vithas,
-        "OSA": osa,
-        "Abonado al Médico": abon
-    })
+    vithas = fact*servicios[s]["VITHAS"]
+    osa = fact*servicios[s]["OSA"]
+    if row["Nivel"]=="Especialista":
+        pct = 0.90 if row["Total_Bruto"]>promedios_nivel["Especialista"] else 0.85
+    else:
+        pct = 0.92 if row["Total_Bruto"]>promedios_nivel["Consultor"] else 0.88
+    abon = osa * pct
+    kpi_cols[i].markdown(f"""
+    <div style="background-color:#2e7d32; border-radius:10px; padding:15px; color:white; text-align:center;">
+        <h5>{s}</h5>
+        <p>Fact: {fact:,.2f} €</p>
+        <p>VITHAS: {vithas:,.2f} €</p>
+        <p>Abono: {abon:,.2f} €</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-df_detalle = pd.DataFrame(detalle_servicios)
-totales = df_detalle[["Facturación","VITHAS","OSA","Abonado al Médico"]].sum()
-fila_total = {"Servicio":"TOTAL"}
-fila_total.update(totales)
-df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
-
-st.markdown("#### Detalle por Servicio")
-gb = GridOptionsBuilder.from_dataframe(df_detalle)
-gb.configure_default_column(type=["numericColumn","numberColumnFilter"], precision=2)
-gridOptions = gb.build()
-AgGrid(df_detalle, gridOptions=gridOptions, fit_columns_on_grid_load=True, height=300)
-
-# -------------------- Tarjeta de reporte del médico --------------------
-total_osa = sum([row[s]*servicios[s]["OSA"] for s in servicios])
-osa_final = total_osa - row["Abonado_a_Medico"]
+# Tarjetas adicionales del reporte
+osa_total = row["Total_OSA_Disponible"]
+osa_final = osa_total - row["Abonado_a_Medico"]
 porc_abonado = row["Abonado_a_Medico"]/row["Total_Bruto"]*100 if row["Total_Bruto"]>0 else 0
 
-servicios_desglose = "".join([f"<li>{s}: {row[s]:,.2f} €</li>" for s in servicios.keys()])
+rep_cols = st.columns(4)
+rep_cols[0].markdown(f"""
+<div style="background-color:#1b5e20; border-radius:10px; padding:20px; color:white; text-align:center;">
+<h4>Total Facturación</h4>
+<p>{row['Total_Bruto']:,.2f} €</p>
+</div>
+""", unsafe_allow_html=True)
 
-st.markdown(f"""
-<div style="background-color:#196f3d; border-radius:15px; padding:20px; color:white; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);">
-<h3>📝 Reporte para {medico_sel}</h3>
-<p><strong>Facturación Total:</strong> {row['Total_Bruto']:,.2f} €</p>
-<p><strong>Desglose por servicio:</strong></p>
-<ul>
-{servicios_desglose}
-</ul>
-<p><strong>VITHAS:</strong> {row['Total_VITHAS']:,.2f} €</p>
-<p><strong>Abonado a {medico_sel}:</strong> {row['Abonado_a_Medico']:,.2f} €</p>
-<p><strong>OSA Final disponible:</strong> {osa_final:,.2f} €</p>
-<p><strong>% de facturación recibido:</strong> {porc_abonado:.1f}%</p>
+rep_cols[1].markdown(f"""
+<div style="background-color:#00695c; border-radius:10px; padding:20px; color:white; text-align:center;">
+<h4>Total VITHAS</h4>
+<p>{row['Total_VITHAS']:,.2f} €</p>
+</div>
+""", unsafe_allow_html=True)
+
+rep_cols[2].markdown(f"""
+<div style="background-color:#2e7d32; border-radius:10px; padding:20px; color:white; text-align:center;">
+<h4>Abonado al Médico</h4>
+<p>{row['Abonado_a_Medico']:,.2f} €</p>
+</div>
+""", unsafe_allow_html=True)
+
+rep_cols[3].markdown(f"""
+<div style="background-color:#558b2f; border-radius:10px; padding:20px; color:white; text-align:center;">
+<h4>OSA Final</h4>
+<p>{osa_final:,.2f} €</p>
+<p>{porc_abonado:.1f}% recibido</p>
 </div>
 """, unsafe_allow_html=True)
 
