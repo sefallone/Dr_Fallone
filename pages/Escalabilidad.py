@@ -111,31 +111,36 @@ fila_total = {"Servicio":"TOTAL"}
 fila_total.update(totales)
 df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_total])], ignore_index=True)
 
-# Fila % sobre Facturación total
+# Fila % sobre Facturación total (excluida de AgGrid)
 fila_pct = {"Servicio":"% del Total"}
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
     fila_pct[col] = totales[col]/totales["Facturación"]*100
-df_detalle = pd.concat([df_detalle, pd.DataFrame([fila_pct])], ignore_index=True)
+
+# -------------------- Preparar AgGrid excluyendo % fila --------------------
+df_aggrid = df_detalle[df_detalle['Servicio'] != '% del Total']
 
 # -------------------- Configuración AgGrid --------------------
-gb = GridOptionsBuilder.from_dataframe(df_detalle)
+gb = GridOptionsBuilder.from_dataframe(df_aggrid)
 gb.configure_default_column(editable=False, resizable=True)
 gb.configure_column("Servicio", pinned="left", width=150)
-# Formato y barra de progreso para columnas numéricas
+
+# JsCode para barra de progreso
 barra_js = JsCode("""
 function(params) {
-    if(params.value == null) return "";
     var value = parseFloat(params.value);
+    if(isNaN(value)) return params.value;
     var max = params.colDef.maxValue;
+    if(!max) max = value;
     var percent = Math.min(value / max * 100, 100);
     return '<div style="background: linear-gradient(90deg, #82E0AA ' + percent + '%, transparent ' + percent + '%); width:100%; padding:2px;">' + value.toFixed(2) + '</div>';
 }
 """)
+
 for col in ["Facturación","VITHAS","OSA","Abonado al Médico"]:
-    gb.configure_column(col, cellRenderer=barra_js, maxValue=df_detalle[col].max())
+    gb.configure_column(col, cellRenderer=barra_js, maxValue=df_aggrid[col].max())
 
 gridOptions = gb.build()
-AgGrid(df_detalle, gridOptions=gridOptions, fit_columns_on_grid_load=True, height=400)
+AgGrid(df_aggrid, gridOptions=gridOptions, fit_columns_on_grid_load=True, height=400)
 
 st.markdown(f"**Resumen:** {medico_sel} facturó {row['Total_Bruto']:.2f} €, se abonará {row['Abonado_a_Medico']:.2f} € según su nivel ({row['Nivel']}).")
 
@@ -156,6 +161,7 @@ st.markdown("""
 - Se parte de la **facturación total por servicio**.
 - Se aplica la distribución **VITHAS/OSA**.
 - Del **pool OSA**, se calcula el **abono final** según el promedio del nivel jerárquico.
-- La tabla muestra detalle por servicio, fila TOTAL y fila % sobre facturación total.
+- La tabla muestra detalle por servicio y fila TOTAL.
 - El gráfico permite comparar fácilmente **Facturación → OSA → Abonado** para todos los médicos de un nivel.
 """)
+
